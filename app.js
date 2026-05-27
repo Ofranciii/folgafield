@@ -1,230 +1,361 @@
 /* ============================================================
-   FolgaField — app.js
-   Lógica com usuários, lote, folgas e excel.
+   FolgaField — data.js
+   Regras de negócio + dados de exemplo + cálculo de período
    ============================================================ */
 
 'use strict';
 
-const App = { user: null, currentScreen: 'dashboard', colabEditando: null, usrEditando: null };
+/* ── Periodicidade ── */
+const PERIODOS = {
+  30: { label: '30 dias', extra1: 0, extra2: 5  },
+  45: { label: '45 dias', extra1: 0, extra2: 9  },
+  60: { label: '60 dias', extra1: 0, extra2: 9  },
+  90: { label: '90 dias', extra1: 0, extra2: 9  },
+   0: { label: 'Sem direito', extra1: 0, extra2: 0 }
+};
 
-function login() {
-  const e = document.getElementById('login-email').value.trim(), s = document.getElementById('login-senha').value;
-  const user = FF.usuarios.find(u => u.email === e && u.senha === s);
-  if (!user) return alert('Credenciais inválidas.');
-  App.user = user;
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('app-screen').style.display = 'flex';
-  document.getElementById('user-name').textContent = user.nome;
-  document.getElementById('user-role').textContent = user.perfil;
-  document.getElementById('user-initials').textContent = FF.initials(user.nome);
-  navigate('dashboard');
-}
+/* ── Mapa de período numérico (planilha) → dias ── */
+const PERIODO_MAP = { 1: 30, 2: 60, 3: 45, 4: 90, 5: 0 };
 
-function logout() { location.reload(); }
+/* ──────────────────────────────────────────────
+   REGRA DE PERÍODO AQUISITIVO:
+   • 1ª folga  = data_apresentacao + periodo_dias
+   • 2ª+ folga = data_retorno_anterior + periodo_dias + extra
+     - 30 dias → +5  = 35 dias de ciclo
+     - 45 dias → +9  = 54 dias de ciclo
+     - 60 dias → +9  = 69 dias de ciclo
+     - 90 dias → +9  = 99 dias de ciclo
+   ────────────────────────────────────────────── */
 
-function navigate(screen, el) {
-  App.currentScreen = screen;
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(`sc-${screen}`)?.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  if(el) el.classList.add('active');
-  document.getElementById('topbar-title').textContent = screen.toUpperCase();
+const FF = {
 
-  const renders = { dashboard: renderDashboard, colaboradores: renderColaboradores, folgas: renderFolgas, historico: renderHistorico, usuarios: renderUsuarios };
-  if (renders[screen]) renders[screen]();
-}
+  /* Adiciona dias a uma Date */
+  addDays(date, days) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  },
 
-function renderDashboard() {
-  const r = FF.getResumo();
-  document.getElementById('kpi-total').textContent = r.total;
-  document.getElementById('kpi-vencidas').textContent = r.vencidas;
-  document.getElementById('kpi-proximas').textContent = r.proximas7 + r.proximas30;
-  document.getElementById('kpi-emfolga').textContent = r.emFolga;
-}
+  /* Formata Date → DD/MM/AAAA */
+  fmt(date) {
+    if (!date) return '—';
+    const d = new Date(date);
+    if (isNaN(d)) return '—';
+    return d.toLocaleDateString('pt-BR');
+  },
 
-/* ── COLABORADORES (Listagem e Exclusão em Lote) ── */
-let colabPage = 1;
-function renderColaboradores() {
-  const adminRh = ['Administrador', 'RH'].includes(App.user?.perfil);
-  document.getElementById('btn-batch-delete').style.display = adminRh && FF.colaboradores.length > 0 ? 'inline-flex' : 'none';
-  
-  const q = (document.getElementById('f-colab-busca')?.value||'').toLowerCase();
-  let list = FF.colaboradores.filter(c => c.nome.toLowerCase().includes(q) || c.chapa.includes(q));
-  
-  const tbody = document.getElementById('colab-tbody');
-  tbody.innerHTML = list.length === 0 ? `<tr><td colspan="8">Nenhum dado.</td></tr>` : list.map(c => {
-    const s = FF.statusFolga(c);
-    return `<tr>
-      <td>${adminRh ? `<input type="checkbox" class="col-check" value="${c.id}">` : ''}</td>
-      <td><div class="person-cell"><div class="avatar av-blue">${FF.initials(c.nome)}</div>${c.nome}</div></td>
-      <td>${c.chapa}</td><td>${c.cpf || '—'} / ${c.cip || '—'}</td><td>${c.obra}</td>
-      <td>${FF.fmt(FF.calcProximaFolga(c))}</td>
-      <td><span class="badge ${s.cls}">${s.label}</span></td>
-      <td><button class="btn-icon" onclick="editarColaborador(${c.id})"><i class="ti ti-edit"></i></button></td>
-    </tr>`;
-  }).join('');
-}
+  /* Parse DD/MM/AAAA ou YYYY-MM-DD → Date */
+  parseDate(str) {
+    if (!str) return null;
+    if (str instanceof Date) return str;
+    const parts = String(str).split(/[\/\-]/);
+    if (parts.length !== 3) return null;
+    if (parts[0].length === 4) return new Date(`${parts[0]}-${parts[1]}-${parts[2]}`);
+    return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+  },
 
-function toggleAllCols() {
-  const master = document.getElementById('check-all-colab').checked;
-  document.querySelectorAll('.col-check').forEach(cb => cb.checked = master);
-}
+  /* Calcula próximo vencimento de folga */
+  calcProximaFolga(colaborador) {
+    const periodo = colaborador.periodoDias;
+    if (!periodo) return null;
 
-function excluirColaboradores() {
-  const selecionados = Array.from(document.querySelectorAll('.col-check:checked')).map(cb => parseInt(cb.value));
-  if (selecionados.length === 0) return alert('Selecione ao menos um colaborador.');
-  if (!confirm(`Excluir ${selecionados.length} colaborador(es)?`)) return;
-  FF.colaboradores = FF.colaboradores.filter(c => !selecionados.includes(c.id));
-  renderColaboradores();
-  showToast('Excluídos com sucesso.');
-}
+    const cfg = PERIODOS[periodo];
+    if (!cfg) return null;
 
-/* ── EDIÇÃO E NOVO COLABORADOR ── */
-function abrirNovoColaborador() { App.colabEditando = null; ['novo-chapa','novo-nome','novo-cpf','novo-cip','novo-funcao','novo-cidade','novo-estado'].forEach(id => document.getElementById(id).value = ''); openModal('modal-novo-colab'); }
-function editarColaborador(id) {
-  const c = FF.colaboradores.find(x => x.id === id); if(!c) return;
-  App.colabEditando = id;
-  document.getElementById('novo-chapa').value = c.chapa; document.getElementById('novo-nome').value = c.nome;
-  document.getElementById('novo-cpf').value = c.cpf || ''; document.getElementById('novo-cip').value = c.cip || '';
-  document.getElementById('novo-funcao').value = c.funcao; document.getElementById('novo-cidade').value = c.cidade || '';
-  document.getElementById('novo-estado').value = c.estado || ''; document.getElementById('novo-obra').value = c.obra;
-  document.getElementById('novo-periodo').value = c.periodoDias; document.getElementById('novo-admissao').value = (c.dataAdmissao?.split('/').reverse().join('-')) || '';
-  openModal('modal-novo-colab');
-}
-function salvarColaborador() {
-  const dados = {
-    chapa: document.getElementById('novo-chapa').value, nome: document.getElementById('novo-nome').value.toUpperCase(),
-    cpf: document.getElementById('novo-cpf').value, cip: document.getElementById('novo-cip').value,
-    funcao: document.getElementById('novo-funcao').value, cidade: document.getElementById('novo-cidade').value,
-    estado: document.getElementById('novo-estado').value, obra: document.getElementById('novo-obra').value,
-    periodoDias: parseInt(document.getElementById('novo-periodo').value),
-    dataAdmissao: document.getElementById('novo-admissao').value.split('-').reverse().join('/'),
-    dataApresentacao: document.getElementById('novo-apresentacao').value.split('-').reverse().join('/'), status: 'Ativo'
-  };
-  if(App.colabEditando) Object.assign(FF.colaboradores.find(x=>x.id===App.colabEditando), dados);
-  else FF.addColaborador(dados);
-  closeModal('modal-novo-colab'); renderColaboradores();
-}
+    const numFolgas = colaborador.historico ? colaborador.historico.length : 0;
 
-/* ── FOLGAS ── */
-let folgaTab = 'programar';
-function renderFolgas() { setFolgaTab(folgaTab); }
-function setFolgaTab(tab) {
-  folgaTab = tab;
-  document.querySelectorAll('#sc-folgas .tab').forEach(t => t.classList.remove('active'));
-  document.querySelector(`#sc-folgas .tab[data-tab="${tab}"]`)?.classList.add('active');
-  document.querySelectorAll('#sc-folgas .tab-pane').forEach(p => p.style.display = 'none');
-  document.getElementById(`folga-${tab}`).style.display = 'block';
-  if(tab === 'gestao') renderGestaoFolgas();
-}
-function buscarColabParaFolga() {
-  const q = document.getElementById('f-colabNome').value.toLowerCase();
-  const res = FF.colaboradores.filter(c => c.nome.toLowerCase().includes(q));
-  document.getElementById('f-sugestoes').innerHTML = res.map(c => `<div class="sugg-item" onclick="selecionarColabFolga(${c.id})">${c.nome}</div>`).join('');
-  document.getElementById('f-sugestoes').style.display = res.length && q.length>1 ? 'block' : 'none';
-}
-function selecionarColabFolga(id) {
-  const c = FF.colaboradores.find(x => x.id === id);
-  document.getElementById('f-colabId').value = id;
-  document.getElementById('f-colabNome').value = c.nome;
-  document.getElementById('f-destino').value = `${c.cidade || ''} / ${c.estado || ''}`;
-  document.getElementById('f-sugestoes').style.display = 'none';
-  document.getElementById('info-colab').style.display = 'block';
-  document.getElementById('info-nome-colab').textContent = c.nome;
-}
-function confirmarFolga() {
-  const c = FF.colaboradores.find(x => x.id === parseInt(document.getElementById('f-colabId').value));
-  if(!c) return alert('Selecione colab');
-  FF.registrarFolga(c, { 
-    dataSaida: document.getElementById('f-saida').value.split('-').reverse().join('/'), 
-    dataRetorno: document.getElementById('f-retorno').value.split('-').reverse().join('/'),
-    origem: document.getElementById('f-origem').value, destino: document.getElementById('f-destino').value
-  });
-  showToast('Folga agendada'); document.getElementById('f-colabNome').value = ''; renderFolgas();
-}
+    /* Sem nenhuma folga registrada → vencimento = apresentacao + periodo */
+    if (numFolgas === 0) {
+      const apres = FF.parseDate(colaborador.dataApresentacao);
+      if (!apres) return null;
+      return FF.addDays(apres, periodo);
+    }
 
-function renderGestaoFolgas() {
-  const tb = document.getElementById('gestao-tbody');
-  const isAdminRh = ['Administrador', 'RH'].includes(App.user?.perfil);
-  const folgas = FF.colaboradores.flatMap(c => (c.historico||[]).map(h => ({c, h})));
-  tb.innerHTML = folgas.map(({c, h}) => `<tr>
-    <td>${c.nome}</td><td>${c.obra}</td><td>${h.dataSaida} a ${h.dataRetorno||'—'}</td><td>${h.destino}</td>
-    <td>
-      ${isAdminRh ? `<select onchange="mudarStatusPassagem(${c.id}, ${h.id}, this.value)" style="padding:2px;font-size:12px">
-        <option ${h.statusPassagem==='Aguardando emissão'?'selected':''}>Aguardando emissão</option>
-        <option ${h.statusPassagem==='Em tratativa'?'selected':''}>Em tratativa</option>
-        <option ${h.statusPassagem==='Emitido'?'selected':''}>Emitido</option>
-        <option ${h.statusPassagem==='Cancelado'?'selected':''}>Cancelado</option>
-      </select>` : `<span class="badge badge-info">${h.statusPassagem||'—'}</span>`}
-    </td>
-  </tr>`).join('');
-}
-function mudarStatusPassagem(cId, hId, val) {
-  const c = FF.colaboradores.find(x=>x.id===cId);
-  const h = c.historico.find(x=>x.id===hId);
-  h.statusPassagem = val; showToast('Status atualizado');
-}
+    /* Com folgas → usa o retorno da última + ciclo da 2ª+ */
+    const ultima = colaborador.historico[colaborador.historico.length - 1];
+    const retorno = FF.parseDate(ultima.dataRetorno);
+    if (!retorno) return null;
 
-/* ── RELATÓRIOS (EXCEL E CSV) ── */
-function gerarRelatorio(tipo, formato) {
-  let rows = [];
-  if (tipo === 'completo') rows = FF.colaboradores.map(c => ({ Chapa: c.chapa, CPF: c.cpf, Nome: c.nome, Obra: c.obra, Status: FF.statusFolga(c).label }));
-  else rows = FF.colaboradores.filter(c => FF.diasParaVencer(c) < 0).map(c => ({ Chapa: c.chapa, Nome: c.nome, VencidaHa: Math.abs(FF.diasParaVencer(c)) }));
-  
-  if(formato === 'xlsx' && typeof XLSX !== 'undefined') {
-    const ws = XLSX.utils.json_to_sheet(rows);
-    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Relatorio");
-    XLSX.writeFile(wb, `Relatorio_${tipo}.xlsx`);
-  } else {
-    const csv = [Object.keys(rows[0]||{}).join(',')].concat(rows.map(r => Object.values(r).join(','))).join('\n');
-    const a = document.createElement('a'); a.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
-    a.download = `Relatorio_${tipo}.csv`; a.click();
+    const ciclo = periodo + cfg.extra2;
+    return FF.addDays(retorno, ciclo);
+  },
+
+  /* Dias até / desde o vencimento (negativo = vencido) */
+  diasParaVencer(colaborador) {
+    const prox = FF.calcProximaFolga(colaborador);
+    if (!prox) return null;
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    return Math.round((prox - hoje) / 86400000);
+  },
+
+  /* Status de folga */
+  statusFolga(colaborador) {
+    if (!colaborador.periodoDias) return { label: 'Sem direito', cls: 'badge-gray' };
+    if (colaborador.emFolga) return { label: 'Em folga', cls: 'badge-info' };
+    const dias = FF.diasParaVencer(colaborador);
+    if (dias === null) return { label: 'Sem dados', cls: 'badge-gray' };
+    if (dias < 0)   return { label: `Vencida há ${Math.abs(dias)}d`, cls: 'badge-danger' };
+    if (dias <= 7)  return { label: `Vence em ${dias}d`, cls: 'badge-danger' };
+    if (dias <= 30) return { label: `Vence em ${dias}d`, cls: 'badge-warning' };
+    return { label: 'Em dia', cls: 'badge-success' };
+  },
+
+  /* Iniciais do nome */
+  initials(nome) {
+    const parts = (nome || '').trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  },
+
+  /* Cor do avatar baseada no status */
+  avatarCls(colaborador) {
+    const s = FF.statusFolga(colaborador);
+    if (s.cls === 'badge-danger')  return 'av-red';
+    if (s.cls === 'badge-warning') return 'av-amber';
+    if (s.cls === 'badge-info')    return 'av-blue';
+    return 'av-teal';
+  },
+
+  /* ── Dados de exemplo (baseado na planilha Azulão) ── */
+  colaboradores: [
+    {
+      id: 1, chapa: '50006', nome: 'RAFAEL RODRIGUES DA SILVA',
+      funcao: 'COORDENADOR DEPTO. RECURSOS HUMANOS',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 30, dataAdmissao: '06/02/2018', dataApresentacao: '02/10/2022',
+      cidade: 'Altos', estado: 'PI', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '10/01/2026', dataRetorno: '19/01/2026', tipo: 'Gozo', destino: 'Altos / PI' },
+        { num: 2, dataSaida: '25/02/2026', dataRetorno: '05/03/2026', tipo: 'Gozo', destino: 'Altos / PI' },
+        { num: 3, dataSaida: '10/04/2026', dataRetorno: '19/04/2026', tipo: 'Gozo', destino: 'Altos / PI' },
+      ]
+    },
+    {
+      id: 2, chapa: '50015', nome: 'MARIANA DOMINIQUE DE ALENCAR SOUZA',
+      funcao: 'ENGENHEIRO CIVIL',
+      obra: 'LT Norte AM', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '01/03/2023', dataApresentacao: '01/03/2023',
+      cidade: 'Araripina', estado: 'PE', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '28/02/2026', dataRetorno: '09/03/2026', tipo: 'Gozo', destino: 'Araripina / PE' },
+      ]
+    },
+    {
+      id: 3, chapa: '50028', nome: 'GUSTAVO FRANCISCO DA SILVA',
+      funcao: 'ENCARREGADO DEPTO PESSOAL',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 90, dataAdmissao: '14/01/2022', dataApresentacao: '08/11/2025',
+      cidade: 'Miranorte', estado: 'TO', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '30/01/2026', dataRetorno: '09/02/2026', tipo: 'Gozo', destino: 'Miranorte / TO' },
+      ]
+    },
+    {
+      id: 4, chapa: '50047', nome: 'PEDRO RAMOS DOS SANTOS SILVA JUNIOR',
+      funcao: 'SUPERVISOR DEPTO PESSOAL',
+      obra: 'LT Norte AM', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '20/01/2024', dataApresentacao: '17/03/2026',
+      cidade: 'Itaboraí', estado: 'RJ', status: 'Em Folga', emFolga: true,
+      historico: [
+        { num: 1, dataSaida: '14/05/2026', dataRetorno: '24/05/2026', tipo: 'Gozo', destino: 'Itaboraí / RJ' },
+      ]
+    },
+    {
+      id: 5, chapa: '50056', nome: 'JOSENILTON MARQUES DA SILVA',
+      funcao: 'MONTADOR III',
+      obra: 'PCH Itapiranga', empresa: 'Azulão Engenharia',
+      periodoDias: 90, dataAdmissao: '12/01/2022', dataApresentacao: '14/02/2025',
+      cidade: 'Presidente Dutra', estado: 'MA', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '15/01/2026', dataRetorno: '24/01/2026', tipo: 'Indenização', destino: 'Pres. Dutra / MA' },
+      ]
+    },
+    {
+      id: 6, chapa: '50421', nome: 'ALTAMIRO ALVES RODRIGUES',
+      funcao: 'COORDENADOR DE QUALIDADE',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 30, dataAdmissao: '15/10/2019', dataApresentacao: '14/01/2026',
+      cidade: 'Serra', estado: 'ES', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '26/04/2026', dataRetorno: '05/05/2026', tipo: 'Gozo', destino: 'Serra / ES' },
+      ]
+    },
+    {
+      id: 7, chapa: '50112', nome: 'ADEMIR PEREIRA RODRIGUES',
+      funcao: 'SUPERVISOR DE ELETRICA',
+      obra: 'LT Norte AM', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '05/01/2024', dataApresentacao: '05/01/2024',
+      cidade: 'Goiânia', estado: 'GO', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '02/03/2026', dataRetorno: '10/03/2026', tipo: 'Gozo', destino: 'Goiânia / GO' },
+        { num: 2, dataSaida: '19/05/2026', dataRetorno: '27/05/2026', tipo: 'Gozo', destino: 'Goiânia / GO' },
+      ]
+    },
+    {
+      id: 8, chapa: '50097', nome: 'GESIVALDO SILVA NASCIMENTO',
+      funcao: 'ENCARREGADO DE ELETRICA',
+      obra: 'Sub Boa Vista', empresa: 'Azulão Engenharia',
+      periodoDias: 90, dataAdmissao: '08/01/2021', dataApresentacao: '16/02/2025',
+      cidade: 'Cascavel', estado: 'CE', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '20/02/2026', dataRetorno: '01/03/2026', tipo: 'Gozo', destino: 'Cascavel / CE' },
+      ]
+    },
+    {
+      id: 9, chapa: '50492', nome: 'NILTON AMORIM DE ARAUJO JUNIOR',
+      funcao: 'COORDENADOR DE OBRAS',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 30, dataAdmissao: '18/06/2024', dataApresentacao: '18/06/2024',
+      cidade: 'Salvador', estado: 'BA', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '16/03/2026', dataRetorno: '24/03/2026', tipo: 'Gozo', destino: 'Salvador / BA' },
+        { num: 2, dataSaida: '29/04/2026', dataRetorno: '07/05/2026', tipo: 'Gozo', destino: 'Salvador / BA' },
+      ]
+    },
+    {
+      id: 10, chapa: '50754', nome: 'WESKLEY PUTENCIO ALVES',
+      funcao: 'SUPERVISOR MONTAGEM ELETROMECANICO',
+      obra: 'PCH Itapiranga', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '10/02/2025', dataApresentacao: '10/02/2025',
+      cidade: 'Araguaína', estado: 'TO', status: 'Ativo', emFolga: false,
+      historico: []
+    },
+    {
+      id: 11, chapa: '50363', nome: 'TATIANE GONCALVES DE OLIVEIRA SANTOS',
+      funcao: 'SUPERVISOR(A) SEGURANCA DO TRABALHO',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '22/02/2022', dataApresentacao: '09/12/2025',
+      cidade: 'Acrelândia', estado: 'AC', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '28/02/2026', dataRetorno: '08/03/2026', tipo: 'Gozo', destino: 'Acrelândia / AC' },
+      ]
+    },
+    {
+      id: 12, chapa: '50769', nome: 'KAROLINE KLUG VIEIRA',
+      funcao: 'ANALISTA DE GESTAO DE RISCO DOCUMENTAL',
+      obra: 'LT Pará', empresa: 'Azulão Engenharia',
+      periodoDias: 90, dataAdmissao: '28/01/2022', dataApresentacao: '14/12/2025',
+      cidade: 'São Lourenço do Sul', estado: 'RS', status: 'Ativo', emFolga: false,
+      historico: []
+    },
+    {
+      id: 13, chapa: '50572', nome: 'MOACIR SANTOS BARRETO',
+      funcao: 'COORDENADOR DE OBRAS',
+      obra: 'UHE Sinop MT', empresa: 'Azulão Engenharia',
+      periodoDias: 30, dataAdmissao: '18/02/2025', dataApresentacao: '18/02/2025',
+      cidade: 'Candeias', estado: 'BA', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '17/03/2026', dataRetorno: '25/03/2026', tipo: 'Gozo', destino: 'Candeias / BA' },
+        { num: 2, dataSaida: '29/04/2026', dataRetorno: '07/05/2026', tipo: 'Gozo', destino: 'Candeias / BA' },
+      ]
+    },
+    {
+      id: 14, chapa: '50880', nome: 'AMAURY AMADO MOTA',
+      funcao: 'COORDENADOR DE QUALIDADE',
+      obra: 'Sub Boa Vista', empresa: 'Azulão Engenharia',
+      periodoDias: 30, dataAdmissao: '01/02/2025', dataApresentacao: '01/02/2025',
+      cidade: 'Fortaleza', estado: 'CE', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '03/03/2026', dataRetorno: '11/03/2026', tipo: 'Gozo', destino: 'Fortaleza / CE' },
+        { num: 2, dataSaida: '15/04/2026', dataRetorno: '23/04/2026', tipo: 'Gozo', destino: 'Fortaleza / CE' },
+      ]
+    },
+    {
+      id: 15, chapa: '50808', nome: 'BRUNO FELIX SOBRINHO',
+      funcao: 'SUPERVISOR DE QUALIDADE',
+      obra: 'LT Norte AM', empresa: 'Azulão Engenharia',
+      periodoDias: 60, dataAdmissao: '06/02/2025', dataApresentacao: '06/02/2025',
+      cidade: 'Parnamirim', estado: 'RN', status: 'Ativo', emFolga: false,
+      historico: [
+        { num: 1, dataSaida: '22/04/2026', dataRetorno: '01/05/2026', tipo: 'Gozo', destino: 'Parnamirim / RN' },
+      ]
+    },
+  ],
+
+  /* ── Usuários ── */
+  usuarios: [
+    { id: 1, nome: 'João Silva',   email: 'joao@azulao.com.br',   perfil: 'Administrador', senha: '1234' },
+    { id: 2, nome: 'Ana Costa',    email: 'ana@azulao.com.br',    perfil: 'RH',            senha: '1234' },
+    { id: 3, nome: 'Marcos Lima',  email: 'marcos@azulao.com.br', perfil: 'Supervisão',    senha: '1234' },
+    { id: 4, nome: 'Carlos Pinto', email: 'carlos@obra.com.br',   perfil: 'Consulta',      senha: '1234' },
+  ],
+
+  /* ── Obras ── */
+  obras: ['UHE Sinop MT','LT Norte AM','PCH Itapiranga','Sub Boa Vista','LT Pará'],
+
+  /* ── Funções e periodicidades padrão ── */
+  periodicidadePorFuncao: {
+    'GERENTE DE PROJETOS': 30, 'GERENTE DE OBRAS': 30, 'COORDENADOR DE OBRAS': 30,
+    'COORDENADOR DEPTO. RECURSOS HUMANOS': 30, 'COORDENADOR DE QUALIDADE': 30,
+    'COORDENADOR SUPRIMENTOS': 30, 'SUPERVISOR DE OBRAS': 60,
+    'SUPERVISOR DE QUALIDADE': 60, 'SUPERVISOR TECNICO': 60,
+    'SUPERVISOR DE PLANEJAMENTO': 60, 'SUPERVISOR DE LOGISTICA': 60,
+    'ENGENHEIRO CIVIL': 60, 'ENGENHEIRO MECANICO': 60,
+    'ENGENHEIRO DE SEGURANÇA DO TRABALHO': 60,
+    'SUPERVISOR(A) SEGURANCA DO TRABALHO': 60,
+    'ENCARREGADO DE TURMA': 90, 'ENCARREGADO DE ELETRICA': 90,
+    'ENCARREGADO DE MANUTENÇÃO ELETRICA': 90, 'ELETRICISTA DE MANUTENÇÃO': 90,
+    'CALDEIREIRO TA': 90, 'SOLDADOR II TA': 90, 'MONTADOR DE ANDAIME': 90,
+    'MONTADOR III': 90, 'MOTORISTA DE CAMINHAO': 90, 'RIGGER': 90,
+  },
+
+  /* ── Helpers de sumário ── */
+  getResumo() {
+    const hoje = new Date(); hoje.setHours(0,0,0,0);
+    let vencidas = 0, proximas7 = 0, proximas30 = 0, emFolga = 0, semDireito = 0;
+    for (const c of this.colaboradores) {
+      if (!c.periodoDias) { semDireito++; continue; }
+      if (c.emFolga) { emFolga++; continue; }
+      const dias = FF.diasParaVencer(c);
+      if (dias === null) continue;
+      if (dias < 0)   vencidas++;
+      else if (dias <= 7)  proximas7++;
+      else if (dias <= 30) proximas30++;
+    }
+    return {
+      total: this.colaboradores.length,
+      ativos: this.colaboradores.filter(c => c.status === 'Ativo').length,
+      emFolga, vencidas, proximas7, proximas30, semDireito,
+      alertas: vencidas + proximas7
+    };
+  },
+
+  getPorObra() {
+    const map = {};
+    for (const c of this.colaboradores) {
+      map[c.obra] = (map[c.obra] || 0) + 1;
+    }
+    return Object.entries(map).sort((a,b) => b[1]-a[1]);
+  },
+
+  /* Adicionar colaborador */
+  addColaborador(dados) {
+    const id = Math.max(...this.colaboradores.map(c=>c.id), 0) + 1;
+    this.colaboradores.push({ id, historico: [], emFolga: false, ...dados });
+  },
+
+  /* Registrar folga */
+  registrarFolga(colab, folga) {
+    if (!colab.historico) colab.historico = [];
+    colab.historico.push({ num: colab.historico.length + 1, ...folga });
+    colab.emFolga = !folga.dataRetorno;
+  },
+
+  /* Registrar retorno */
+  registrarRetorno(colab, dataRetorno) {
+    if (!colab.historico || colab.historico.length === 0) return;
+    colab.historico[colab.historico.length-1].dataRetorno = dataRetorno;
+    colab.emFolga = false;
+  },
+
+  /* Descrição da regra de período para exibição */
+  descricaoRegra(periodoDias, numFolga) {
+    if (!periodoDias) return 'Sem direito a folga';
+    if (numFolga <= 1) {
+      return `${numFolga === 0 ? '1ª' : '2ª'} folga: Data de apresentação + ${periodoDias} dias`;
+    }
+    const cfg = PERIODOS[periodoDias];
+    const ciclo = periodoDias + (cfg ? cfg.extra2 : 0);
+    return `${numFolga}ª+ folga: Data retorno anterior + ${periodoDias}d + ${cfg.extra2}d = ${ciclo} dias de ciclo`;
   }
-}
-
-/* ── DOCUMENTOS GENÉRICO ── */
-function gerarDocumento() {
-  const c = FF.colaboradores.find(x=>x.id===docColabId); if(!c) return;
-  const texto = `TERMO DE PROGRAMAÇÃO DE FOLGA\n\nNome: ${c.nome}\nCPF: ${c.cpf}\nCIP: ${c.cip}\nOrigem (Obra): ${c.obra}\nDestino (Residência): ${c.cidade}/${c.estado}\nSaída: ${document.getElementById('doc-saida').value}\n\nAssinatura: _________________________`;
-  const a = document.createElement('a'); a.href = 'data:text/plain;charset=utf-8,'+encodeURIComponent(texto);
-  a.download = `Folga_${c.cpf}.txt`; a.click();
-}
-let docColabId;
-function buscarColabDoc() {
-  const q = document.getElementById('doc-colab').value;
-  const res = FF.colaboradores.filter(c => c.nome.includes(q.toUpperCase()));
-  document.getElementById('doc-sugestoes').innerHTML = res.map(c => `<div class="sugg-item" onclick="docColabId=${c.id};document.getElementById('doc-colab').value='${c.nome}';this.parentElement.style.display='none'">${c.nome}</div>`).join('');
-  document.getElementById('doc-sugestoes').style.display = 'block';
-}
-
-/* ── USUÁRIOS ── */
-function renderUsuarios() {
-  const tb = document.getElementById('usuarios-tbody');
-  tb.innerHTML = FF.usuarios.map(u => `<tr><td>${u.nome}</td><td>${u.email}</td><td>${u.perfil}</td><td>
-    ${App.user?.perfil === 'Administrador' ? `<button class="btn-icon" onclick="editarUsuario(${u.id})"><i class="ti ti-edit"></i></button> <button class="btn-icon" onclick="excluirUsuario(${u.id})"><i class="ti ti-trash"></i></button>` : '—'}
-  </td></tr>`).join('');
-}
-function abrirNovoUsuario() { App.usrEditando=null; document.getElementById('usr-nome').value=''; openModal('modal-usuario'); }
-function editarUsuario(id) {
-  const u = FF.usuarios.find(x=>x.id===id); App.usrEditando = id;
-  document.getElementById('usr-nome').value=u.nome; document.getElementById('usr-email').value=u.email;
-  document.getElementById('usr-perfil').value=u.perfil; document.getElementById('usr-senha').value=u.senha;
-  openModal('modal-usuario');
-}
-function salvarUsuario() {
-  const u = { nome: document.getElementById('usr-nome').value, email: document.getElementById('usr-email').value, perfil: document.getElementById('usr-perfil').value, senha: document.getElementById('usr-senha').value };
-  if(App.usrEditando) Object.assign(FF.usuarios.find(x=>x.id===App.usrEditando), u);
-  else FF.usuarios.push({id: Date.now(), ...u});
-  closeModal('modal-usuario'); renderUsuarios(); showToast('Usuário salvo');
-}
-function excluirUsuario(id) { if(id===App.user.id) return alert('Não pode excluir a si'); FF.usuarios = FF.usuarios.filter(x=>x.id!==id); renderUsuarios(); }
-
-function downloadModelo() {
-  const csv = "CHAPA,CPF,CIP,NOME,FUNCAO,ADMISSAO,PERIODO(Dias),CIDADE,ESTADO,OBRA\n123,000.000.000-00,123456,TESTE SILVA,ENGENHEIRO,01/01/2026,60,SAO PAULO,SP,UHE Sinop";
-  const a = document.createElement('a'); a.href='data:text/csv;charset=utf-8,'+encodeURI(csv); a.download='modelo.csv'; a.click();
-}
-
-/* Utils */
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function showToast(msg) { const t = document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'), 3000); }
+};
