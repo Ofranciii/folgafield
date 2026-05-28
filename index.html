@@ -7,41 +7,52 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <style>
-    /* ── Extras inline ── */
-    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-    .cal-header-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 4px; }
-    .cal-header-day { text-align: center; font-size: 11px; font-weight: 600; color: var(--text-3); padding: 4px; text-transform: uppercase; letter-spacing: .5px; }
-    .cal-day { min-height: 68px; padding: 5px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 12px; cursor: pointer; transition: background var(--transition); }
-    .cal-day:hover { background: var(--gray-50); }
-    .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
-    .cal-num { display: block; font-weight: 600; color: var(--text-2); margin-bottom: 3px; }
-    .cal-hoje { background: var(--blue-50) !important; border-color: var(--blue-200) !important; }
-    .cal-hoje .cal-num { color: var(--blue-600); }
-    .cal-vence  { border-left: 3px solid var(--red-400); }
-    .cal-saida  { border-left: 3px solid var(--amber-400); }
-    .cal-retorno { border-left: 3px solid var(--teal-400); }
-    .sugg-wrap { position: relative; }
-    .sugg-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border-2); border-radius: var(--radius); z-index: 50; box-shadow: var(--shadow); display: none; max-height: 220px; overflow-y: auto; }
-    .sugg-item { padding: 8px 12px; cursor: pointer; transition: background var(--transition); }
-    .sugg-item:hover { background: var(--gray-50); }
-    .dragging { border-color: var(--blue-400) !important; background: var(--blue-50) !important; }
-    .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--gray-900); color: #fff; padding: 10px 18px; border-radius: var(--radius-lg); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; z-index: 9999; transition: transform .3s ease; white-space: nowrap; box-shadow: var(--shadow); }
-    .toast.show { transform: translateX(-50%) translateY(0); }
-    .toast-success { background: var(--teal-600); }
-    .toast-info { background: var(--blue-600); }
-    .toast-error { background: var(--red-600); }
-    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 99; }
-    @media(max-width:768px){ .sidebar.open ~ .main-area .sidebar-overlay { display: block; } }
-    .info-box { background: var(--blue-50); border: 1px solid var(--blue-100); border-radius: var(--radius-lg); padding: 14px 16px; margin-top: 14px; display: none; }
-    .info-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--blue-100); font-size: 13px; }
-    .info-row:last-child { border-bottom: none; }
-    .info-row span:first-child { color: var(--blue-800); }
-    .info-row span:last-child { font-weight: 500; color: var(--blue-900); }
-    input[type=file] { display: none; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-    .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-2); margin-bottom: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .table-info { font-size: 12px; color: var(--text-3); }
+    /* ── Calendário ── */
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+    .cal-header-row{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+    .cal-header-day{text-align:center;font-size:11px;font-weight:600;color:var(--text-3);padding:4px;text-transform:uppercase;letter-spacing:.5px}
+    .cal-day{min-height:62px;padding:5px;border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;cursor:pointer;transition:background var(--transition)}
+    .cal-day:hover{background:var(--gray-50)}.cal-day.empty{background:transparent!important;border-color:transparent!important;cursor:default}
+    .cal-num{display:block;font-weight:600;color:var(--text-2);margin-bottom:3px}
+    .cal-hoje{background:var(--blue-50)!important;border-color:var(--blue-200)!important}.cal-hoje .cal-num{color:var(--blue-600)}
+    .cal-vence{border-left:3px solid var(--red-400)}.cal-saida{border-left:3px solid var(--amber-400)}.cal-retorno{border-left:3px solid var(--teal-400)}
+    /* ── Sugestões ── */
+    .sugg-wrap{position:relative}
+    .sugg-list{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius);z-index:50;box-shadow:var(--shadow);display:none;max-height:220px;overflow-y:auto}
+    .sugg-item{padding:9px 12px;cursor:pointer;transition:background var(--transition);font-size:13px}.sugg-item:hover{background:var(--gray-50)}
+    /* ── Upload ── */
+    .dragging{border-color:var(--blue-400)!important;background:var(--blue-50)!important}
+    /* ── Toast ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray-900);color:#fff;padding:10px 20px;border-radius:var(--radius-lg);font-size:13px;font-weight:500;display:flex;align-items:center;gap:8px;z-index:9999;transition:transform .3s ease;white-space:nowrap;box-shadow:var(--shadow);max-width:90vw}
+    .toast.show{transform:translateX(-50%) translateY(0)}.toast-success{background:var(--teal-600)}.toast-info{background:var(--blue-600)}.toast-error{background:var(--red-600)}.toast-warning{background:var(--amber-600)}
+    /* ── Info folga ── */
+    .info-box{background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius-lg);padding:14px 16px;margin-top:14px;display:none}
+    .info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid var(--blue-100);font-size:13px;gap:8px}.info-row:last-child{border-bottom:none}
+    .info-row span:first-child{color:var(--blue-800);flex-shrink:0}.info-row span:last-child{font-weight:500;color:var(--blue-900);text-align:right}
+    /* ── Seleção lote ── */
+    .tr-selected td{background:var(--blue-50)!important}
+    table input[type=checkbox]{cursor:pointer;width:15px;height:15px;accent-color:var(--blue-600)}
+    .sel-toolbar{display:none;align-items:center;gap:10px;padding:9px 14px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius);margin-bottom:12px;font-size:13px;flex-wrap:wrap}
+    /* ── Misc ── */
+    input[type=file]{display:none}
+    .legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;flex-shrink:0}
+    .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-2);margin-bottom:12px}
+    .legend-item{display:flex;align-items:center;gap:5px}
+    .badge-amber{background:#FDF2DC;color:#854F0B}
+    /* ── Timeline ── */
+    .timeline{position:relative;padding-left:22px}
+    .timeline::before{content:'';position:absolute;left:7px;top:8px;bottom:8px;width:1px;background:var(--border)}
+    .tl-item{position:relative;margin-bottom:16px}
+    .tl-dot{position:absolute;left:-18px;top:5px;width:10px;height:10px;border-radius:50%;border:2px solid var(--surface)}
+    .tl-dot-blue{background:var(--blue-400)}.tl-dot-green{background:var(--teal-400)}
+    .tl-dot-amber{background:var(--amber-400)}.tl-dot-red{background:var(--red-400)}.tl-dot-gray{background:var(--gray-300)}
+    .tl-date{font-size:11px;color:var(--text-3);margin-bottom:2px}.tl-text{font-size:13px}
+    /* ── Senha hint ── */
+    #u-senha-hint{display:none;font-size:11px;color:var(--text-3);margin-top:4px}
+    /* ── Responsivo sidebar mobile ── */
+    @media(max-width:768px){#sidebar-toggle{display:flex!important}}
+    /* ── Modal confirm ── */
+    .confirm-icon{font-size:36px;margin-bottom:12px;display:block}
   </style>
 </head>
 <body>
@@ -54,80 +65,45 @@
         <div class="login-logo-icon"><i class="ti ti-building-factory-2"></i></div>
         <div>
           <div class="login-title">FolgaField</div>
-          <div class="login-sub">Sistema de Controle de Folgas de Campo</div>
+          <div class="login-sub">Controle de Folgas de Campo · Azulão Engenharia</div>
         </div>
       </div>
-      <div class="login-field">
-        <label>E-mail</label>
-        <input type="email" id="login-email" placeholder="joao@azulao.com.br" value="joao@azulao.com.br">
-      </div>
-      <div class="login-field">
-        <label>Senha</label>
-        <input type="password" id="login-senha" placeholder="••••••••" value="1234">
-      </div>
-      <p id="login-erro" style="color:var(--red-600);font-size:12px;min-height:16px;margin:4px 0"></p>
+      <div class="login-field"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com.br" value="joao@azulao.com.br" autocomplete="email"></div>
+      <div class="login-field"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••" value="1234" autocomplete="current-password"></div>
+      <p id="login-erro" style="color:var(--red-600);font-size:12px;min-height:18px;margin:4px 0" role="alert"></p>
       <button class="login-btn" onclick="login()">Entrar no sistema</button>
-      <p class="login-version">v1.0.0 · FolgaField 2026 · Azulão Engenharia<br>
-        <span style="font-size:10px">Acesso demo: joao@azulao.com.br / 1234</span>
-      </p>
+      <p class="login-version">v3.0 · FolgaField 2026<br><span style="font-size:10px">Demo: joao@azulao.com.br / 1234</span></p>
     </div>
   </div>
 </div>
 
 <!-- ══ APP ══ -->
 <div id="app-screen" class="app-layout" style="display:none">
-
   <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <aside class="sidebar" role="navigation" aria-label="Menu principal">
     <div class="sidebar-logo">
-      <div class="logo-icon"><i class="ti ti-building-factory-2"></i></div>
-      <div>
-        <div class="logo-text">FolgaField</div>
-        <div class="logo-sub">Azulão Engenharia</div>
-      </div>
+      <div class="logo-icon"><i class="ti ti-building-factory-2" aria-hidden="true"></i></div>
+      <div><div class="logo-text">FolgaField</div><div class="logo-sub">Azulão Engenharia</div></div>
     </div>
     <nav class="nav">
       <div class="nav-section">Principal</div>
-      <div class="nav-item active" data-screen="dashboard" onclick="navigate('dashboard',this)">
-        <i class="ti ti-dashboard"></i> Dashboard
-      </div>
-      <div class="nav-item" data-screen="alertas" onclick="navigate('alertas',this)">
-        <i class="ti ti-bell"></i> Alertas
-        <span class="nav-badge" id="badge-alertas">0</span>
-      </div>
-      <div class="nav-item" data-screen="calendario" onclick="navigate('calendario',this)">
-        <i class="ti ti-calendar"></i> Calendário
-      </div>
+      <div class="nav-item active" data-screen="dashboard" onclick="navigate('dashboard',this)"><i class="ti ti-dashboard" aria-hidden="true"></i> Dashboard</div>
+      <div class="nav-item" data-screen="alertas" onclick="navigate('alertas',this)"><i class="ti ti-bell" aria-hidden="true"></i> Alertas <span class="nav-badge" id="badge-alertas" style="display:none">0</span></div>
+      <div class="nav-item" data-screen="calendario" onclick="navigate('calendario',this)"><i class="ti ti-calendar" aria-hidden="true"></i> Calendário</div>
       <div class="nav-section">Gestão</div>
-      <div class="nav-item" data-screen="colaboradores" onclick="navigate('colaboradores',this)">
-        <i class="ti ti-users"></i> Colaboradores
-      </div>
-      <div class="nav-item" data-screen="folgas" onclick="navigate('folgas',this)">
-        <i class="ti ti-clock-off"></i> Programação de Folgas
-      </div>
-      <div class="nav-item" data-screen="historico" onclick="navigate('historico',this)">
-        <i class="ti ti-history"></i> Histórico
-      </div>
+      <div class="nav-item" data-screen="colaboradores" onclick="navigate('colaboradores',this)"><i class="ti ti-users" aria-hidden="true"></i> Colaboradores</div>
+      <div class="nav-item" data-screen="folgas" onclick="navigate('folgas',this)"><i class="ti ti-clock-off" aria-hidden="true"></i> Programação de Folgas</div>
+      <div class="nav-item" data-screen="historico" onclick="navigate('historico',this)"><i class="ti ti-history" aria-hidden="true"></i> Histórico</div>
       <div class="nav-section">Operações</div>
-      <div class="nav-item" data-screen="importar" onclick="navigate('importar',this)">
-        <i class="ti ti-file-import"></i> Importar Planilha
-      </div>
-      <div class="nav-item" data-screen="relatorios" onclick="navigate('relatorios',this)">
-        <i class="ti ti-report"></i> Relatórios
-      </div>
-      <div class="nav-item" data-screen="documentos" onclick="navigate('documentos',this)">
-        <i class="ti ti-file-text"></i> Gerar Documentos
-      </div>
+      <div class="nav-item" data-screen="importar" onclick="navigate('importar',this)"><i class="ti ti-file-import" aria-hidden="true"></i> Importar Planilha</div>
+      <div class="nav-item" data-screen="relatorios" onclick="navigate('relatorios',this)"><i class="ti ti-report" aria-hidden="true"></i> Relatórios</div>
+      <div class="nav-item" data-screen="documentos" onclick="navigate('documentos',this)"><i class="ti ti-file-text" aria-hidden="true"></i> Gerar Documentos</div>
       <div class="nav-section">Configuração</div>
-      <div class="nav-item" data-screen="usuarios" onclick="navigate('usuarios',this)">
-        <i class="ti ti-shield-check"></i> Controle de Acesso
-      </div>
-      <div class="nav-item" onclick="logout()">
-        <i class="ti ti-logout"></i> Sair
-      </div>
+      <div class="nav-item" id="nav-usuarios" data-screen="usuarios" onclick="navigate('usuarios',this)"><i class="ti ti-shield-check" aria-hidden="true"></i> Controle de Acesso</div>
+      <div class="nav-item" onclick="logout()"><i class="ti ti-logout" aria-hidden="true"></i> Sair</div>
     </nav>
     <div class="sidebar-user">
-      <div class="avatar-sm" id="user-initials">JS</div>
+      <div class="avatar-sm" id="user-initials" aria-hidden="true">JS</div>
       <div style="flex:1;min-width:0">
         <div class="user-name" id="user-name">João Silva</div>
         <div class="user-role" id="user-role">Administrador</div>
@@ -137,78 +113,64 @@
 
   <!-- MAIN -->
   <div class="main-area">
-
-    <!-- TOPBAR -->
     <header class="topbar">
-      <button class="btn-icon" id="sidebar-toggle" style="display:none;margin-right:4px"><i class="ti ti-menu-2"></i></button>
-      <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div class="search-wrap">
-        <i class="ti ti-search"></i>
-        <input type="text" id="search-global" placeholder="Buscar colaborador ou matrícula...">
+      <button class="btn-icon" id="sidebar-toggle" style="display:none" aria-label="Menu"><i class="ti ti-menu-2"></i></button>
+      <h1 class="topbar-title" id="topbar-title" style="font-size:15px;font-weight:600">Dashboard</h1>
+      <div class="search-wrap" role="search">
+        <i class="ti ti-search" aria-hidden="true"></i>
+        <input type="text" id="search-global" placeholder="Buscar colaborador..." aria-label="Buscar colaborador">
       </div>
-      <button class="btn" onclick="navigate('importar')"><i class="ti ti-file-import"></i> Importar</button>
-      <button class="btn btn-primary" onclick="abrirNovoColaborador()"><i class="ti ti-plus"></i> Novo</button>
+      <button class="btn" onclick="navigate('importar')" title="Importar planilha"><i class="ti ti-file-import"></i> <span class="hide-sm">Importar</span></button>
+      <button class="btn btn-primary" onclick="abrirNovoColaborador()"><i class="ti ti-plus"></i> <span class="hide-sm">Novo</span></button>
     </header>
 
-    <!-- CONTENT -->
-    <div class="content">
+    <main class="content">
 
       <!-- ══ DASHBOARD ══ -->
       <div id="sc-dashboard" class="screen active">
         <div class="kpi-grid">
-          <div class="kpi info"><div class="kpi-label">Total de colaboradores</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">cadastrados no sistema</div><i class="ti ti-users kpi-icon"></i></div>
-          <div class="kpi danger"><div class="kpi-label">Folgas vencidas</div><div class="kpi-value" id="kpi-vencidas">0</div><div class="kpi-sub">ação imediata necessária</div><i class="ti ti-alert-triangle kpi-icon"></i></div>
-          <div class="kpi warning"><div class="kpi-label">Vencem em 30 dias</div><div class="kpi-value" id="kpi-proximas">0</div><div class="kpi-sub">agendar com urgência</div><i class="ti ti-clock kpi-icon"></i></div>
-          <div class="kpi success"><div class="kpi-label">Em folga agora</div><div class="kpi-value" id="kpi-emfolga">0</div><div class="kpi-sub">retorno programado</div><i class="ti ti-beach kpi-icon"></i></div>
-          <div class="kpi"><div class="kpi-label">Total de alertas</div><div class="kpi-value" id="kpi-alertas">0</div><div class="kpi-sub">vencidas + próximas 7d</div><i class="ti ti-bell kpi-icon"></i></div>
+          <div class="kpi info"><div class="kpi-label">Colaboradores</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">cadastrados</div><i class="ti ti-users kpi-icon" aria-hidden="true"></i></div>
+          <div class="kpi danger"><div class="kpi-label">Folgas vencidas</div><div class="kpi-value" id="kpi-vencidas">0</div><div class="kpi-sub">ação imediata</div><i class="ti ti-alert-triangle kpi-icon" aria-hidden="true"></i></div>
+          <div class="kpi warning"><div class="kpi-label">Vencem em 30d</div><div class="kpi-value" id="kpi-proximas">0</div><div class="kpi-sub">agendar urgente</div><i class="ti ti-clock kpi-icon" aria-hidden="true"></i></div>
+          <div class="kpi success"><div class="kpi-label">Em folga agora</div><div class="kpi-value" id="kpi-emfolga">0</div><div class="kpi-sub">retorno programado</div><i class="ti ti-beach kpi-icon" aria-hidden="true"></i></div>
+          <div class="kpi"><div class="kpi-label">Total alertas</div><div class="kpi-value" id="kpi-alertas">0</div><div class="kpi-sub">vencidas + próx.7d</div><i class="ti ti-bell kpi-icon" aria-hidden="true"></i></div>
         </div>
         <div class="grid-2">
-          <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-building"></i> Colaboradores por obra</div></div>
-            <div id="obras-lista"></div>
-          </div>
-          <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-chart-pie"></i> Status das folgas</div></div>
-            <div class="legend">
+          <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-building" aria-hidden="true"></i> Por obra</div></div><div id="obras-lista"></div></div>
+          <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-chart-pie" aria-hidden="true"></i> Status das folgas</div></div>
+            <div class="legend" aria-label="Legenda">
               <span class="legend-item"><span class="legend-dot" style="background:#E14B4A"></span>Vencidas</span>
               <span class="legend-item"><span class="legend-dot" style="background:#D4860F"></span>Próx.7d</span>
               <span class="legend-item"><span class="legend-dot" style="background:#EF9F27"></span>Próx.30d</span>
               <span class="legend-item"><span class="legend-dot" style="background:#3A7BD5"></span>Em folga</span>
               <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>Em dia</span>
             </div>
-            <div class="chart-wrap"><canvas id="chart-status" role="img" aria-label="Gráfico de status das folgas"></canvas></div>
+            <div class="chart-wrap"><canvas id="chart-status" role="img" aria-label="Gráfico status das folgas"></canvas></div>
           </div>
         </div>
         <div class="grid-2">
           <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-alert-triangle" style="color:var(--red-600)"></i> Alertas críticos</div>
+            <div class="card-title"><div class="card-title-left"><i class="ti ti-alert-triangle" style="color:var(--red-600)" aria-hidden="true"></i> Alertas críticos</div>
               <button class="btn btn-sm" onclick="navigate('alertas')"><i class="ti ti-arrow-right"></i> Ver todos</button>
             </div>
             <div id="alertas-recentes"></div>
           </div>
           <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-calendar-check"></i> Saídas programadas — mês atual</div></div>
-            <div class="table-wrap">
-              <table><thead><tr><th>Colaborador</th><th>Saída</th><th>Retorno</th><th>Per.</th></tr></thead>
-              <tbody id="programadas-mes"></tbody></table>
-            </div>
+            <div class="card-title"><div class="card-title-left"><i class="ti ti-calendar-check" aria-hidden="true"></i> Saídas do mês atual</div></div>
+            <div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Saída</th><th>Retorno</th><th>Per.</th></tr></thead><tbody id="programadas-mes"></tbody></table></div>
           </div>
         </div>
         <div class="grid-2">
-          <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-chart-bar"></i> Folgas por mês — 2026</div></div>
-            <div class="chart-wrap"><canvas id="chart-mensal" role="img" aria-label="Gráfico de folgas por mês"></canvas></div>
-          </div>
-          <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-chart-donut"></i> Distribuição por periodicidade</div></div>
+          <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-chart-bar" aria-hidden="true"></i> Folgas por mês</div></div><div class="chart-wrap"><canvas id="chart-mensal" role="img" aria-label="Folgas por mês"></canvas></div></div>
+          <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-chart-donut" aria-hidden="true"></i> Por periodicidade</div></div>
             <div class="legend">
               <span class="legend-item"><span class="legend-dot" style="background:#1A54A8"></span>30d</span>
               <span class="legend-item"><span class="legend-dot" style="background:#1D9E75"></span>45d</span>
               <span class="legend-item"><span class="legend-dot" style="background:#D4860F"></span>60d</span>
               <span class="legend-item"><span class="legend-dot" style="background:#E14B4A"></span>90d</span>
-              <span class="legend-item"><span class="legend-dot" style="background:#8890A0"></span>Sem dir.</span>
+              <span class="legend-item"><span class="legend-dot" style="background:#8890A0"></span>Sem</span>
             </div>
-            <div class="chart-wrap"><canvas id="chart-periodo" role="img" aria-label="Gráfico de periodicidade"></canvas></div>
+            <div class="chart-wrap"><canvas id="chart-periodo" role="img" aria-label="Por periodicidade"></canvas></div>
           </div>
         </div>
       </div>
@@ -217,54 +179,33 @@
       <div id="sc-alertas" class="screen">
         <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:16px">
           <div class="kpi danger"><div class="kpi-label">Vencidas</div><div class="kpi-value" id="kpi-a-vencidas">0</div><div class="kpi-sub">ação imediata</div></div>
-          <div class="kpi warning"><div class="kpi-label">Vencem em 7 dias</div><div class="kpi-value" id="kpi-a-urgente">0</div><div class="kpi-sub">urgente</div></div>
-          <div class="kpi warning"><div class="kpi-label">Vencem em 30 dias</div><div class="kpi-value" id="kpi-a-proximas">0</div><div class="kpi-sub">programar</div></div>
+          <div class="kpi warning"><div class="kpi-label">Vencem 7 dias</div><div class="kpi-value" id="kpi-a-urgente">0</div><div class="kpi-sub">urgente</div></div>
+          <div class="kpi warning"><div class="kpi-label">Vencem 30 dias</div><div class="kpi-value" id="kpi-a-proximas">0</div><div class="kpi-sub">programar</div></div>
         </div>
         <div class="card">
-          <div class="card-title">
-            <div class="card-title-left"><i class="ti ti-sort-descending"></i> Colaboradores com folga crítica</div>
-            <button class="btn btn-sm" onclick="gerarRelatorio('vencidas')"><i class="ti ti-download"></i> Exportar</button>
+          <div class="card-title"><div class="card-title-left"><i class="ti ti-sort-descending"></i> Colaboradores com folga crítica</div>
+            <button class="btn btn-sm" onclick="gerarRelatorio('vencidas','csv')"><i class="ti ti-download"></i> CSV</button>
           </div>
           <div class="filter-bar">
-            <select id="f-alerta-tipo" onchange="renderAlertas()">
-              <option value="">Todos os alertas</option>
-              <option value="vencidas">Apenas vencidas</option>
-              <option value="urgente">Vence em 7 dias</option>
-              <option value="proximas">Vence em 30 dias</option>
-            </select>
-            <select id="f-alerta-obra" onchange="renderAlertas()">
-              <option value="">Todas as obras</option>
-              <option>UHE Sinop MT</option><option>LT Norte AM</option>
-              <option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option>
-            </select>
+            <select id="f-alerta-tipo" onchange="renderAlertas()" aria-label="Filtrar por tipo"><option value="">Todos os alertas</option><option value="vencidas">Apenas vencidas</option><option value="urgente">Vence em 7 dias</option><option value="proximas">Vence em 30 dias</option></select>
+            <select id="f-alerta-obra" onchange="renderAlertas()" aria-label="Filtrar por obra"><option value="">Todas as obras</option><option>UHE Sinop MT</option><option>LT Norte AM</option><option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option></select>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Periodicidade</th><th>Última folga</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead>
-              <tbody id="alertas-tbody"></tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Periodicidade</th><th>Última folga</th><th>Vencimento</th><th>Status</th><th>Ação</th></tr></thead><tbody id="alertas-tbody"></tbody></table></div>
         </div>
-        <div class="card" style="margin-top:0">
-          <div class="card-title"><div class="card-title-left"><i class="ti ti-info-circle"></i> Regra de período aquisitivo</div></div>
+        <div class="card">
+          <div class="card-title"><div class="card-title-left"><i class="ti ti-info-circle"></i> Regras de período aquisitivo</div></div>
           <div class="grid-2">
-            <div>
-              <p style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-1)">1ª folga (qualquer periodicidade)</p>
-              <p style="font-size:13px;color:var(--text-2)">Data de apresentação na obra + periodicidade em dias</p>
-              <div style="margin-top:10px;padding:10px;background:var(--gray-50);border-radius:var(--radius);font-size:12px">
-                <div style="margin-bottom:4px"><strong>Exemplo 30d:</strong> chegou em 06/02/2025 → vence em 08/03/2025</div>
-                <div style="margin-bottom:4px"><strong>Exemplo 60d:</strong> chegou em 01/03/2025 → vence em 30/04/2025</div>
-                <div><strong>Exemplo 90d:</strong> chegou em 14/01/2025 → vence em 14/04/2025</div>
-              </div>
+            <div style="padding:14px;background:var(--gray-50);border-radius:var(--radius-lg)">
+              <p style="font-size:13px;font-weight:600;margin-bottom:6px">1ª folga</p>
+              <p style="font-size:12px;color:var(--text-2)">Data de apresentação na obra + periodicidade em dias</p>
             </div>
             <div>
-              <p style="font-size:13px;font-weight:600;margin-bottom:10px;color:var(--text-1)">2ª folga em diante</p>
-              <p style="font-size:13px;color:var(--text-2)">Data de retorno da folga anterior + ciclo estendido</p>
-              <div style="margin-top:10px;padding:10px;background:var(--gray-50);border-radius:var(--radius);font-size:12px">
-                <div style="margin-bottom:4px"><strong style="color:var(--blue-600)">30 dias → +5 = 35 dias de ciclo</strong></div>
-                <div style="margin-bottom:4px"><strong style="color:var(--teal-600)">45 dias → +9 = 54 dias de ciclo</strong></div>
-                <div style="margin-bottom:4px"><strong style="color:var(--amber-600)">60 dias → +9 = 69 dias de ciclo</strong></div>
-                <div><strong style="color:var(--red-600)">90 dias → +9 = 99 dias de ciclo</strong></div>
+              <p style="font-size:13px;font-weight:600;margin-bottom:8px">2ª folga em diante</p>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                <div style="padding:7px;background:var(--blue-50);border-radius:var(--radius);border-left:3px solid var(--blue-400)"><strong>30d → +5 = 35d</strong></div>
+                <div style="padding:7px;background:var(--teal-50);border-radius:var(--radius);border-left:3px solid var(--teal-400)"><strong>45d → +9 = 54d</strong></div>
+                <div style="padding:7px;background:var(--amber-50);border-radius:var(--radius);border-left:3px solid var(--amber-400)"><strong>60d → +9 = 69d</strong></div>
+                <div style="padding:7px;background:var(--red-50);border-radius:var(--radius);border-left:3px solid var(--red-400)"><strong>90d → +9 = 99d</strong></div>
               </div>
             </div>
           </div>
@@ -275,75 +216,60 @@
       <div id="sc-calendario" class="screen">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
           <div style="display:flex;align-items:center;gap:10px">
-            <button class="btn-icon" onclick="calAnterior()"><i class="ti ti-chevron-left"></i></button>
-            <span style="font-size:16px;font-weight:600;min-width:160px;text-align:center" id="cal-titulo"></span>
-            <button class="btn-icon" onclick="calProximo()"><i class="ti ti-chevron-right"></i></button>
+            <button class="btn-icon" onclick="calAnterior()" aria-label="Mês anterior"><i class="ti ti-chevron-left"></i></button>
+            <span style="font-size:16px;font-weight:600;min-width:160px;text-align:center" id="cal-titulo" aria-live="polite"></span>
+            <button class="btn-icon" onclick="calProximo()" aria-label="Próximo mês"><i class="ti ti-chevron-right"></i></button>
           </div>
           <div class="legend">
             <span class="legend-item"><span class="legend-dot" style="background:var(--red-400)"></span>Vencimento</span>
             <span class="legend-item"><span class="legend-dot" style="background:var(--amber-400)"></span>Saída</span>
             <span class="legend-item"><span class="legend-dot" style="background:var(--teal-400)"></span>Retorno</span>
-            <span class="legend-item"><span class="legend-dot" style="background:var(--blue-100)"></span>Hoje</span>
+            <span class="legend-item"><span class="legend-dot" style="background:var(--blue-100);border:1px solid var(--blue-200)"></span>Hoje</span>
           </div>
         </div>
         <div class="card">
-          <div class="cal-header-row">
-            <div class="cal-header-day">Dom</div><div class="cal-header-day">Seg</div><div class="cal-header-day">Ter</div>
-            <div class="cal-header-day">Qua</div><div class="cal-header-day">Qui</div><div class="cal-header-day">Sex</div><div class="cal-header-day">Sáb</div>
-          </div>
-          <div class="cal-grid" id="cal-grid"></div>
+          <div class="cal-header-row"><div class="cal-header-day">Dom</div><div class="cal-header-day">Seg</div><div class="cal-header-day">Ter</div><div class="cal-header-day">Qua</div><div class="cal-header-day">Qui</div><div class="cal-header-day">Sex</div><div class="cal-header-day">Sáb</div></div>
+          <div class="cal-grid" id="cal-grid" role="grid" aria-label="Calendário de folgas"></div>
         </div>
-        <div class="card">
-          <div class="card-title"><div class="card-title-left"><i class="ti ti-list"></i> Eventos do mês</div></div>
-          <div class="table-wrap">
-            <table><thead><tr><th>Data</th><th>Colaborador</th><th>Tipo</th><th>Destino</th><th>Periodicidade</th></tr></thead>
-            <tbody id="cal-eventos"></tbody></table>
-          </div>
+        <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-list"></i> Eventos do mês</div></div>
+          <div class="table-wrap"><table><thead><tr><th>Data</th><th>Colaborador</th><th>Tipo</th><th>Destino</th><th>Per.</th></tr></thead><tbody id="cal-eventos"></tbody></table></div>
         </div>
       </div>
 
       <!-- ══ COLABORADORES ══ -->
       <div id="sc-colaboradores" class="screen">
         <div class="filter-bar">
-          <input type="text" id="f-colab-busca" placeholder="Nome ou matrícula..." oninput="colabPage=1;renderColaboradores()">
-          <select id="f-colab-obra" onchange="colabPage=1;renderColaboradores()">
-            <option value="">Todas as obras</option>
-            <option>UHE Sinop MT</option><option>LT Norte AM</option>
-            <option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option>
-          </select>
-          <select id="f-colab-status" onchange="colabPage=1;renderColaboradores()">
-            <option value="">Todos os status</option>
-            <option>Ativo</option><option>Em Folga</option><option>Inativo</option>
-          </select>
-          <select id="f-colab-periodo" onchange="colabPage=1;renderColaboradores()">
-            <option value="">Toda periodicidade</option>
-            <option value="30">30 dias</option><option value="45">45 dias</option>
-            <option value="60">60 dias</option><option value="90">90 dias</option>
-            <option value="0">Sem direito</option>
-          </select>
+          <input type="text" id="f-colab-busca" placeholder="Nome ou matrícula..." oninput="App.colabPage=1;renderColaboradores()" aria-label="Buscar colaborador">
+          <select id="f-colab-obra" onchange="App.colabPage=1;renderColaboradores()" aria-label="Filtrar por obra"><option value="">Todas as obras</option><option>UHE Sinop MT</option><option>LT Norte AM</option><option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option></select>
+          <select id="f-colab-status" onchange="App.colabPage=1;renderColaboradores()" aria-label="Filtrar por status"><option value="">Todos os status</option><option>Ativo</option><option>Em Folga</option><option>Inativo</option></select>
+          <select id="f-colab-periodo" onchange="App.colabPage=1;renderColaboradores()" aria-label="Filtrar por periodicidade"><option value="">Toda periodicidade</option><option value="30">30 dias</option><option value="45">45 dias</option><option value="60">60 dias</option><option value="90">90 dias</option><option value="0">Sem direito</option></select>
           <button class="btn btn-primary" onclick="abrirNovoColaborador()"><i class="ti ti-plus"></i> Novo</button>
-          <button class="btn" onclick="gerarRelatorio('completo')"><i class="ti ti-download"></i> Exportar</button>
+          <button class="btn" onclick="gerarRelatorio('completo','csv')"><i class="ti ti-download"></i> CSV</button>
+          <button class="btn" onclick="gerarRelatorio('completo','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+        </div>
+        <div id="colab-sel-toolbar" class="sel-toolbar" role="toolbar" aria-label="Ações de seleção">
+          <span id="sel-count" style="color:var(--blue-600);font-weight:500"></span>
+          <button class="btn btn-sm" id="btn-sel-all" onclick="toggleSelectAll()">Selecionar todos</button>
+          <button class="btn btn-sm btn-danger" id="btn-excluir-lote" style="display:none" onclick="excluirEmLote()"><i class="ti ti-trash"></i> Excluir selecionados</button>
+          <button class="btn btn-sm" onclick="App.colabSelecionados.clear();renderColaboradores()"><i class="ti ti-x"></i> Limpar seleção</button>
         </div>
         <div class="card">
-          <div class="card-title">
-            <div class="card-title-left" id="colab-count"></div>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>#</th><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Periodicidade</th><th>Última saída</th><th>Próxima folga</th><th>Status</th><th>Ações</th></tr></thead>
-              <tbody id="colab-tbody"></tbody>
-            </table>
-          </div>
-          <div class="pagination" id="colab-pag"></div>
+          <div class="card-title"><span id="colab-count" style="font-size:13px;color:var(--text-2)"></span></div>
+          <div class="table-wrap"><table>
+            <thead><tr><th style="width:30px"><input type="checkbox" id="chk-all" onclick="toggleSelectAll()" aria-label="Selecionar todos"></th><th>#</th><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Periodicidade</th><th>Última saída</th><th>Próxima folga</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="colab-tbody"></tbody>
+          </table></div>
+          <div class="pagination" id="colab-pag" role="navigation" aria-label="Paginação"></div>
         </div>
       </div>
 
       <!-- ══ FOLGAS ══ -->
       <div id="sc-folgas" class="screen">
-        <div class="tabs">
-          <div class="tab active" data-tab="programar" onclick="setFolgaTab('programar')">Programar Saída</div>
-          <div class="tab" data-tab="retorno" onclick="setFolgaTab('retorno')">Registrar Retorno</div>
-          <div class="tab" data-tab="simular" onclick="setFolgaTab('simular')">Simular Mês</div>
+        <div class="tabs" role="tablist">
+          <div class="tab active" data-tab="programar" onclick="setFolgaTab('programar')" role="tab">Programar Saída</div>
+          <div class="tab" data-tab="programadas" onclick="setFolgaTab('programadas')" role="tab">Folgas do Mês</div>
+          <div class="tab" data-tab="retorno" onclick="setFolgaTab('retorno')" role="tab">Registrar Retorno</div>
+          <div class="tab" data-tab="simular" onclick="setFolgaTab('simular')" role="tab">Simular Mês</div>
         </div>
 
         <!-- Tab: Programar -->
@@ -353,96 +279,109 @@
               <div class="card-title"><div class="card-title-left"><i class="ti ti-calendar-plus"></i> Programar folga</div></div>
               <div class="form-grid">
                 <div class="form-group full">
-                  <label>Colaborador *</label>
+                  <label for="f-colabNome">Colaborador *</label>
                   <div class="sugg-wrap">
-                    <input type="text" id="f-colabNome" placeholder="Buscar por nome ou matrícula..." oninput="buscarColabParaFolga()" autocomplete="off">
+                    <input type="text" id="f-colabNome" placeholder="Buscar por nome ou matrícula..." oninput="buscarColabParaFolga()" autocomplete="off" aria-autocomplete="list">
                     <input type="hidden" id="f-colabId">
-                    <div class="sugg-list" id="f-sugestoes"></div>
+                    <div class="sugg-list" id="f-sugestoes" role="listbox"></div>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label>Data de saída *</label>
-                  <input type="date" id="f-saida">
+                <div class="form-group"><label for="f-saida">Data de saída *</label><input type="date" id="f-saida"></div>
+                <div class="form-group"><label for="f-retorno">Data de retorno</label><input type="date" id="f-retorno"></div>
+                <div class="form-group"><label for="f-tipo">Tipo</label>
+                  <select id="f-tipo"><option>Gozo</option><option>Indenização</option><option>Remarcação</option></select>
                 </div>
                 <div class="form-group">
-                  <label>Data de retorno</label>
-                  <input type="date" id="f-retorno">
+                  <label for="f-origem">Origem <span style="font-size:11px;color:var(--text-3)">(cidade da obra)</span></label>
+                  <input type="text" id="f-origem" placeholder="Ex: Silves / AM">
                 </div>
                 <div class="form-group">
-                  <label>Tipo</label>
-                  <select id="f-tipo">
-                    <option>Gozo</option>
-                    <option>Indenização</option>
-                    <option>Remarcação</option>
-                  </select>
+                  <label for="f-destino">Destino <span style="font-size:11px;color:var(--teal-600)">✓ automático</span></label>
+                  <input type="text" id="f-destino" placeholder="Preenchido automaticamente">
                 </div>
-                <div class="form-group">
-                  <label>Destino (Cidade / Estado)</label>
-                  <input type="text" id="f-destino" placeholder="Ex: Fortaleza / CE">
-                </div>
-                <div class="form-group full">
-                  <label>Observações</label>
-                  <textarea id="f-obs" rows="2" placeholder="Motivo de remarcação, justificativas..."></textarea>
-                </div>
+                <div class="form-group full"><label for="f-obs">Observações</label><textarea id="f-obs" rows="2" placeholder="Notas, remarcações..."></textarea></div>
               </div>
               <div class="form-actions">
-                <button class="btn" onclick="document.getElementById('f-colabNome').value='';document.getElementById('f-colabId').value='';document.getElementById('info-colab').style.display='none'">Limpar</button>
+                <button class="btn" onclick="limparFormFolga()"><i class="ti ti-x"></i> Limpar</button>
                 <button class="btn btn-primary" onclick="confirmarFolga()"><i class="ti ti-check"></i> Confirmar folga</button>
               </div>
             </div>
             <div class="card" style="margin-bottom:0">
-              <div class="card-title"><div class="card-title-left"><i class="ti ti-info-circle"></i> Cálculo automático de período</div></div>
-              <div class="alert alert-info">
-                <i class="ti ti-robot"></i>
-                <div>O sistema calcula automaticamente o vencimento da próxima folga com base na regra de período aquisitivo de cada colaborador.</div>
-              </div>
-              <div id="info-colab" class="info-box">
+              <div class="card-title"><div class="card-title-left"><i class="ti ti-calculator"></i> Cálculo automático</div></div>
+              <div class="alert alert-info"><i class="ti ti-robot"></i><div style="font-size:12px">Ao selecionar o colaborador, o <strong>destino</strong> é preenchido com sua cidade cadastrada e a <strong>origem</strong> com a cidade da obra.</div></div>
+              <div id="info-colab" class="info-box" role="status">
                 <div class="info-row"><span>Colaborador</span><span id="info-nome-colab">—</span></div>
                 <div class="info-row"><span>Periodicidade</span><span id="info-periodo">—</span></div>
-                <div class="info-row"><span>Número desta folga</span><span id="info-num-folga">—</span></div>
-                <div class="info-row"><span>Próxima folga calculada</span><span id="info-proxima">—</span></div>
+                <div class="info-row"><span>Nº desta folga</span><span id="info-num-folga">—</span></div>
+                <div class="info-row"><span>Próxima folga</span><span id="info-proxima">—</span></div>
                 <div class="info-row"><span>Status atual</span><span id="info-status">—</span></div>
-                <div class="info-row" style="border-bottom:none"><span>Regra aplicada</span><span id="info-regra" style="font-size:11px;text-align:right;max-width:200px">—</span></div>
+                <div class="info-row" style="border-bottom:none"><span>Regra aplicada</span><span id="info-regra" style="font-size:11px;text-align:right;max-width:180px">—</span></div>
               </div>
-              <div style="margin-top:16px;padding:14px;background:var(--gray-50);border-radius:var(--radius-lg)">
-                <p style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:10px">Ciclos de período aquisitivo</p>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
-                  <div style="padding:8px;background:var(--blue-50);border-radius:var(--radius);border-left:3px solid var(--blue-400)">
-                    <strong>30 dias</strong><br>
-                    <span style="color:var(--text-3)">1ª: apres. + 30d</span><br>
-                    <span style="color:var(--blue-600)">2ª+: ret. + 35d</span>
-                  </div>
-                  <div style="padding:8px;background:var(--teal-50);border-radius:var(--radius);border-left:3px solid var(--teal-400)">
-                    <strong>45 dias</strong><br>
-                    <span style="color:var(--text-3)">1ª: apres. + 45d</span><br>
-                    <span style="color:var(--teal-600)">2ª+: ret. + 54d</span>
-                  </div>
-                  <div style="padding:8px;background:var(--amber-50);border-radius:var(--radius);border-left:3px solid var(--amber-400)">
-                    <strong>60 dias</strong><br>
-                    <span style="color:var(--text-3)">1ª: apres. + 60d</span><br>
-                    <span style="color:var(--amber-600)">2ª+: ret. + 69d</span>
-                  </div>
-                  <div style="padding:8px;background:var(--red-50);border-radius:var(--radius);border-left:3px solid var(--red-400)">
-                    <strong>90 dias</strong><br>
-                    <span style="color:var(--text-3)">1ª: apres. + 90d</span><br>
-                    <span style="color:var(--red-600)">2ª+: ret. + 99d</span>
-                  </div>
+              <div style="margin-top:14px;padding:12px;background:var(--gray-50);border-radius:var(--radius-lg)">
+                <p style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text-1)">Ciclos de período aquisitivo</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:11px">
+                  <div style="padding:7px;background:var(--blue-50);border-radius:var(--radius);border-left:3px solid var(--blue-400)"><strong>30 dias</strong><br><span style="color:var(--text-3)">1ª: apres.+30d</span><br><span style="color:var(--blue-600)">2ª+: ret.+35d</span></div>
+                  <div style="padding:7px;background:var(--teal-50);border-radius:var(--radius);border-left:3px solid var(--teal-400)"><strong>45 dias</strong><br><span style="color:var(--text-3)">1ª: apres.+45d</span><br><span style="color:var(--teal-600)">2ª+: ret.+54d</span></div>
+                  <div style="padding:7px;background:var(--amber-50);border-radius:var(--radius);border-left:3px solid var(--amber-400)"><strong>60 dias</strong><br><span style="color:var(--text-3)">1ª: apres.+60d</span><br><span style="color:var(--amber-600)">2ª+: ret.+69d</span></div>
+                  <div style="padding:7px;background:var(--red-50);border-radius:var(--radius);border-left:3px solid var(--red-400)"><strong>90 dias</strong><br><span style="color:var(--text-3)">1ª: apres.+90d</span><br><span style="color:var(--red-600)">2ª+: ret.+99d</span></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Tab: Folgas do Mês -->
+        <div id="folga-programadas" class="tab-pane" style="display:none">
+          <div class="card">
+            <div class="card-title">
+              <div class="card-title-left"><i class="ti ti-calendar-event"></i> Folgas programadas</div>
+              <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <input type="month" id="fp-mes" style="width:auto;padding:5px 10px;font-size:12px;border:1px solid var(--border-2);border-radius:var(--radius)" onchange="renderFolgasProgramadas()" aria-label="Mês de referência">
+                <button class="btn btn-sm" onclick="gerarRelatorio('mensal','csv')"><i class="ti ti-download"></i> CSV</button>
+                <button class="btn btn-sm" onclick="gerarRelatorio('mensal','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+              </div>
+            </div>
+            <div class="alert alert-info" style="margin-bottom:12px"><i class="ti ti-info-circle"></i>
+              <div style="font-size:12px"><strong>RH / Admin:</strong> pode atualizar status e registrar vouchers. <strong>Supervisão / Consulta:</strong> apenas visualiza.</div>
+            </div>
+            <!-- Filtros adicionais -->
+            <div class="filter-bar" style="margin-bottom:12px">
+              <input type="text" id="fp-busca" placeholder="Nome ou matrícula..." oninput="renderFolgasProgramadas()" style="width:180px;font-size:12px;padding:5px 10px" aria-label="Buscar colaborador">
+              <select id="fp-status" onchange="renderFolgasProgramadas()" style="width:auto;font-size:12px;padding:5px 8px" aria-label="Filtrar por status">
+                <option value="">Todos os status</option>
+                <option value="aguardando">Aguardando emissão</option>
+                <option value="tratativa">Em tratativa</option>
+                <option value="emitido">Voucher emitido</option>
+                <option value="indenizacao">Indenização aprovada</option>
+                <option value="finalizado">Finalizado</option>
+              </select>
+              <select id="fp-obra" onchange="renderFolgasProgramadas()" style="width:auto;font-size:12px;padding:5px 8px" aria-label="Filtrar por obra">
+                <option value="">Todas as obras</option>
+                <option>UHE Sinop MT</option><option>LT Norte AM</option><option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option>
+              </select>
+            </div>
+            <p style="font-size:12px;color:var(--text-3);margin-bottom:10px" id="fp-count" aria-live="polite"></p>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Colaborador</th><th>Saída</th><th>Retorno</th><th>Tipo</th><th>Rota</th><th>Indenização</th><th>Status itinerário</th><th>Ações</th></tr></thead>
+              <tbody id="fp-tbody"></tbody>
+            </table></div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <div class="card-title"><div class="card-title-left"><i class="ti ti-tag"></i> Legenda de status</div></div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;font-size:12px">
+              <span class="badge badge-gray">Aguardando emissão</span>
+              <span class="badge badge-warning">Em tratativa</span>
+              <span class="badge badge-info">Voucher emitido</span>
+              <span class="badge badge-amber">Indenização aprovada</span>
+              <span class="badge badge-success">Finalizado</span>
+            </div>
+          </div>
+        </div>
+
         <!-- Tab: Retorno -->
         <div id="folga-retorno" class="tab-pane" style="display:none">
-          <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-calendar-check"></i> Registrar retorno de folga</div></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Colaborador</th><th>Data saída</th><th>Retorno previsto</th><th>Destino</th><th>Ação</th></tr></thead>
-                <tbody id="retornos-tbody"></tbody>
-              </table>
-            </div>
+          <div class="card"><div class="card-title"><div class="card-title-left"><i class="ti ti-calendar-check"></i> Registrar retorno de folga</div></div>
+            <div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Saída</th><th>Retorno previsto</th><th>Destino</th><th>Ação</th></tr></thead><tbody id="retornos-tbody"></tbody></table></div>
           </div>
         </div>
 
@@ -450,37 +389,25 @@
         <div id="folga-simular" class="tab-pane" style="display:none">
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-math-function"></i> Simular folgas por mês</div></div>
-            <div class="alert alert-info"><i class="ti ti-info-circle"></i>
-              <div>Simula quem possui folga vencendo no mês selecionado — replica a funcionalidade da macro VBA da planilha original.</div>
-            </div>
+            <div class="alert alert-info"><i class="ti ti-info-circle"></i><div style="font-size:12px">Identifica colaboradores com folga vencendo no mês — equivalente à macro VBA da planilha original.</div></div>
             <div class="form-grid">
-              <div class="form-group">
-                <label>Mês de referência *</label>
-                <input type="month" id="sim-mes" value="2026-05">
-              </div>
-              <div class="form-group">
-                <label>Obra / Projeto</label>
-                <select id="sim-obra">
-                  <option value="">Todas as obras</option>
-                  <option>UHE Sinop MT</option><option>LT Norte AM</option>
-                  <option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option>
-                </select>
+              <div class="form-group"><label for="sim-mes">Mês de referência *</label><input type="month" id="sim-mes" aria-required="true"></div>
+              <div class="form-group"><label for="sim-obra">Obra / Projeto</label>
+                <select id="sim-obra"><option value="">Todas as obras</option><option>UHE Sinop MT</option><option>LT Norte AM</option><option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option></select>
               </div>
             </div>
-            <div class="form-actions" style="padding-top:10px;border-top:none;margin-top:0">
-              <button class="btn btn-primary" onclick="executarSimulacao()"><i class="ti ti-player-play"></i> Executar simulação</button>
+            <div class="form-actions" style="border-top:none;padding-top:0;margin-top:10px">
+              <button class="btn btn-primary" onclick="executarSimulacao()"><i class="ti ti-player-play"></i> Executar</button>
             </div>
           </div>
           <div id="sim-resultado" class="card" style="display:none">
             <div class="card-title"><div class="card-title-left" id="sim-resultado-titulo"></div>
-              <button class="btn btn-sm" onclick="gerarRelatorio('mensal')"><i class="ti ti-download"></i> Exportar</button>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-sm" onclick="gerarRelatorio('mensal','csv')"><i class="ti ti-download"></i> CSV</button>
+                <button class="btn btn-sm" onclick="gerarRelatorio('mensal','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+              </div>
             </div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Vencimento</th><th>Status</th></tr></thead>
-                <tbody id="sim-tbody"></tbody>
-              </table>
-            </div>
+            <div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Matrícula</th><th>Obra</th><th>Vencimento</th><th>Status</th></tr></thead><tbody id="sim-tbody"></tbody></table></div>
           </div>
         </div>
       </div>
@@ -488,23 +415,17 @@
       <!-- ══ HISTÓRICO ══ -->
       <div id="sc-historico" class="screen">
         <div class="card">
-          <div class="card-title">
-            <div class="card-title-left"><i class="ti ti-history"></i> Histórico completo de folgas</div>
-            <button class="btn btn-sm" onclick="gerarRelatorio('completo')"><i class="ti ti-download"></i> Exportar</button>
+          <div class="card-title"><div class="card-title-left"><i class="ti ti-history"></i> Histórico completo</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-sm" onclick="gerarRelatorio('completo','csv')"><i class="ti ti-download"></i> CSV</button>
+              <button class="btn btn-sm" onclick="gerarRelatorio('completo','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+            </div>
           </div>
           <div class="filter-bar">
-            <input type="text" id="f-hist-busca" placeholder="Buscar colaborador..." oninput="renderHistorico()">
-            <select id="f-hist-tipo" onchange="renderHistorico()">
-              <option value="">Todos os tipos</option>
-              <option>Gozo</option><option>Indenização</option><option>Remarcação</option>
-            </select>
+            <input type="text" id="f-hist-busca" placeholder="Buscar colaborador..." oninput="renderHistorico()" aria-label="Buscar no histórico">
+            <select id="f-hist-tipo" onchange="renderHistorico()" aria-label="Filtrar por tipo"><option value="">Todos os tipos</option><option>Gozo</option><option>Indenização</option><option>Remarcação</option></select>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Colaborador</th><th>Matrícula</th><th>Tipo</th><th>Saída</th><th>Retorno</th><th>Destino</th><th>Obra</th></tr></thead>
-              <tbody id="hist-tbody"></tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table><thead><tr><th>Colaborador</th><th>Matrícula</th><th>Tipo</th><th>Saída</th><th>Retorno</th><th>Destino</th><th>Obra</th></tr></thead><tbody id="hist-tbody"></tbody></table></div>
         </div>
       </div>
 
@@ -515,70 +436,54 @@
           <div class="step-line"></div>
           <div class="step pending"><div class="step-n">2</div><span class="step-label">Preencher</span></div>
           <div class="step-line"></div>
-          <div class="step pending"><div class="step-n">3</div><span class="step-label">Fazer upload</span></div>
+          <div class="step pending"><div class="step-n">3</div><span class="step-label">Upload</span></div>
           <div class="step-line"></div>
           <div class="step pending"><div class="step-n">4</div><span class="step-label">Confirmar</span></div>
         </div>
         <div class="grid-2">
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-file-import"></i> Importar planilha Excel</div></div>
-            <div class="upload-zone" id="upload-zone">
-              <i class="ti ti-upload"></i>
+            <div class="upload-zone" id="upload-zone" role="button" tabindex="0" aria-label="Clique ou arraste para fazer upload">
+              <i class="ti ti-upload" aria-hidden="true"></i>
               <strong>Arraste sua planilha aqui</strong>
-              <p style="margin-top:6px">ou clique para selecionar o arquivo</p>
-              <p style="font-size:11px;margin-top:8px">Suporta .xlsx, .xlsm, .csv</p>
+              <p style="margin-top:6px">ou clique para selecionar</p>
+              <p style="font-size:11px;margin-top:6px;color:var(--text-3)">Suporta .xlsx, .xlsm, .csv · até 1.000 colaboradores</p>
             </div>
-            <input type="file" id="file-input" accept=".xlsx,.xlsm,.csv" onchange="handleUpload(event)">
-            <div id="upload-preview" style="display:none;margin-top:12px;padding:10px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius)">
-              <i class="ti ti-file-check" style="color:var(--teal-600)"></i>
+            <input type="file" id="file-input" accept=".xlsx,.xlsm,.csv" onchange="handleUpload(event)" aria-label="Selecionar arquivo">
+            <div id="upload-preview" style="display:none;margin-top:12px;padding:10px;background:var(--teal-50);border:1px solid var(--teal-100);border-radius:var(--radius)" role="status">
+              <i class="ti ti-file-check" style="color:var(--teal-600)" aria-hidden="true"></i>
               <span id="upload-nome" style="font-size:13px;color:var(--teal-800);margin-left:6px"></span>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              <i class="ti ti-info-circle"></i>
-              <div style="font-size:12px">O sistema reconhece automaticamente o layout da planilha <strong>Azulão</strong>. Datas em formato serial Excel são convertidas automaticamente.</div>
-            </div>
-            <div style="margin-top:12px;font-size:12px;color:var(--text-2)">
-              <p style="font-weight:600;margin-bottom:6px">Regras de importação:</p>
+            <div class="alert alert-info" style="margin-top:12px"><i class="ti ti-info-circle"></i><div style="font-size:12px">Reconhece layout da planilha Azulão. Duplicidades detectadas pela matrícula (CHAPA). CPF e CIP incluídos.</div></div>
+            <div style="margin-top:10px;font-size:12px;color:var(--text-2)">
+              <p style="font-weight:600;margin-bottom:6px">Regras:</p>
               <div style="display:flex;flex-direction:column;gap:3px">
-                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> Duplicidades detectadas pela matrícula (CHAPA)</span>
-                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> Dados existentes são atualizados (não duplicados)</span>
-                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> "INDENIZAR" mapeado para tipo de indenização</span>
-                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> Período aquisitivo recalculado automaticamente</span>
+                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> Duplicidades por matrícula (CHAPA)</span>
+                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> CPF e CIP mapeados automaticamente</span>
+                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> "INDENIZAR" → tipo indenização</span>
+                <span><i class="ti ti-check" style="color:var(--teal-600)"></i> Período aquisitivo recalculado</span>
               </div>
             </div>
           </div>
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-file-download"></i> Modelo de planilha</div></div>
-            <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Baixe o modelo oficial para garantir que o formato seja compatível com o sistema. Preencha e faça o upload.</p>
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Modelo oficial com todos os campos, incluindo CPF e CIP.</p>
             <div style="padding:16px;background:var(--gray-50);border-radius:var(--radius-lg);border:1px solid var(--border);margin-bottom:14px">
               <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
-                <i class="ti ti-file-spreadsheet" style="font-size:28px;color:var(--teal-600)"></i>
-                <div>
-                  <div style="font-size:13px;font-weight:600">Modelo_Importacao_FolgaField.csv</div>
-                  <div style="font-size:11px;color:var(--text-3)">20 colunas · até 200 colaboradores</div>
-                </div>
+                <i class="ti ti-file-spreadsheet" style="font-size:28px;color:var(--teal-600)" aria-hidden="true"></i>
+                <div><div style="font-size:13px;font-weight:600">Modelo_Importacao_FolgaField_v3.csv</div><div style="font-size:11px;color:var(--text-3)">22 colunas · até 1.000 colaboradores</div></div>
               </div>
-              <button class="btn btn-primary" style="width:100%" onclick="downloadModelo()">
-                <i class="ti ti-download"></i> Baixar modelo (CSV)
-              </button>
+              <button class="btn btn-primary" style="width:100%" onclick="downloadModelo()"><i class="ti ti-download"></i> Baixar modelo (CSV)</button>
             </div>
-            <p style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px">Colunas do modelo:</p>
-            <div style="font-size:12px;color:var(--text-2);display:grid;grid-template-columns:1fr 1fr;gap:4px">
-              <span><i class="ti ti-point" style="font-size:10px"></i> CHAPA (matrícula)*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> NOME*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> FUNÇÃO*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> DATA ADMISSÃO*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> CHEGADA/RETORNO*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> PERÍODO*</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> CIDADE / ESTADO</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> OBRA / EMPRESA</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> Nº FOLGA ATUAL</span>
-              <span><i class="ti ti-point" style="font-size:10px"></i> DATAS DE FOLGA</span>
+            <p style="font-size:12px;font-weight:600;color:var(--text-1);margin-bottom:8px">Campos incluídos:</p>
+            <div style="font-size:12px;color:var(--text-2);display:grid;grid-template-columns:1fr 1fr;gap:3px">
+              <span>✓ CHAPA*</span><span>✓ NOME*</span>
+              <span>✓ FUNÇÃO*</span><span style="color:var(--blue-600)">✓ CPF <em>(novo)</em></span>
+              <span style="color:var(--blue-600)">✓ CIP <em>(novo)</em></span><span>✓ DATA ADMISSÃO*</span>
+              <span>✓ CHEGADA/RETORNO*</span><span>✓ PERÍODO*</span>
+              <span>✓ CIDADE / ESTADO</span><span>✓ OBRA / EMPRESA</span>
             </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              <i class="ti ti-bulb"></i>
-              <div style="font-size:12px">Abra o CSV no Excel, preencha e salve como <strong>.xlsx</strong> antes de importar. Use o campo PERÍODO: 1=30d, 2=60d, 3=45d, 4=90d, 5=Sem direito.</div>
-            </div>
+            <div class="alert alert-info" style="margin-top:12px"><i class="ti ti-bulb"></i><div style="font-size:12px">PERÍODO: 1=30d · 2=60d · 3=45d · 4=90d · 5=Sem direito</div></div>
           </div>
         </div>
       </div>
@@ -588,46 +493,39 @@
         <div class="grid-2">
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-report"></i> Relatórios disponíveis</div></div>
-            <div style="display:flex;flex-direction:column;gap:8px">
-              <div class="alert alert-danger" style="cursor:pointer" onclick="gerarRelatorio('vencidas')">
-                <i class="ti ti-alert-triangle"></i>
-                <div style="flex:1"><strong>Folgas Vencidas</strong><br><span style="font-size:11px">Todos os colaboradores com folga vencida</span></div>
-                <i class="ti ti-download"></i>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="padding:14px;background:var(--red-50);border:1px solid var(--red-100);border-radius:var(--radius-lg)">
+                <p style="font-weight:600;color:var(--red-800);margin-bottom:6px"><i class="ti ti-alert-triangle"></i> Folgas vencidas</p>
+                <p style="font-size:12px;color:var(--text-2);margin-bottom:10px">Todos com folga vencida, incluindo CPF e CIP</p>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm" onclick="gerarRelatorio('vencidas','csv')"><i class="ti ti-download"></i> CSV</button>
+                  <button class="btn btn-sm" onclick="gerarRelatorio('vencidas','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+                </div>
               </div>
-              <div class="alert alert-warning" style="cursor:pointer" onclick="gerarRelatorio('mensal')">
-                <i class="ti ti-calendar"></i>
-                <div style="flex:1"><strong>Programação Mensal</strong><br><span style="font-size:11px">Folgas do mês atual</span></div>
-                <i class="ti ti-download"></i>
+              <div style="padding:14px;background:var(--amber-50);border:1px solid var(--amber-100);border-radius:var(--radius-lg)">
+                <p style="font-weight:600;color:var(--amber-800);margin-bottom:6px"><i class="ti ti-calendar"></i> Programação mensal</p>
+                <p style="font-size:12px;color:var(--text-2);margin-bottom:10px">Folgas do mês atual com origem e destino</p>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm" onclick="gerarRelatorio('mensal','csv')"><i class="ti ti-download"></i> CSV</button>
+                  <button class="btn btn-sm" onclick="gerarRelatorio('mensal','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+                </div>
               </div>
-              <div class="alert alert-info" style="cursor:pointer" onclick="gerarRelatorio('completo')">
-                <i class="ti ti-users"></i>
-                <div style="flex:1"><strong>Relatório Completo</strong><br><span style="font-size:11px">Todos os colaboradores com status atualizado</span></div>
-                <i class="ti ti-download"></i>
+              <div style="padding:14px;background:var(--blue-50);border:1px solid var(--blue-100);border-radius:var(--radius-lg)">
+                <p style="font-weight:600;color:var(--blue-800);margin-bottom:6px"><i class="ti ti-users"></i> Relatório completo</p>
+                <p style="font-size:12px;color:var(--text-2);margin-bottom:10px">Todos os colaboradores com status, CPF e CIP</p>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-sm" onclick="gerarRelatorio('completo','csv')"><i class="ti ti-download"></i> CSV</button>
+                  <button class="btn btn-sm" onclick="gerarRelatorio('completo','xlsx')"><i class="ti ti-file-spreadsheet"></i> Excel</button>
+                </div>
               </div>
-            </div>
-            <div class="alert alert-info" style="margin-top:12px">
-              <i class="ti ti-info-circle"></i>
-              <div style="font-size:12px">Todos os relatórios são exportados em CSV compatível com Excel. Em produção com banco de dados, PDFs serão gerados automaticamente.</div>
             </div>
           </div>
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-chart-line"></i> Integrações futuras</div></div>
             <div style="display:flex;flex-direction:column;gap:10px;font-size:13px">
-              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)">
-                <div style="font-weight:600;margin-bottom:4px"><i class="ti ti-brand-whatsapp" style="color:#25D366"></i> WhatsApp</div>
-                <div style="color:var(--text-3);font-size:12px">Notificações automáticas de vencimento por WhatsApp Business API</div>
-                <span class="badge badge-gray" style="margin-top:6px">Em breve</span>
-              </div>
-              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)">
-                <div style="font-weight:600;margin-bottom:4px"><i class="ti ti-chart-bar" style="color:#F2C811"></i> Power BI</div>
-                <div style="color:var(--text-3);font-size:12px">Exportação de dados estruturados para dashboards gerenciais no Power BI</div>
-                <span class="badge badge-gray" style="margin-top:6px">Em breve</span>
-              </div>
-              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)">
-                <div style="font-weight:600;margin-bottom:4px"><i class="ti ti-mail" style="color:var(--blue-600)"></i> E-mail automático</div>
-                <div style="color:var(--text-3);font-size:12px">Alertas por e-mail para RH e supervisores quando folga está próxima do vencimento</div>
-                <span class="badge badge-gray" style="margin-top:6px">Em breve</span>
-              </div>
+              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-weight:600;margin-bottom:4px"><i class="ti ti-brand-whatsapp" style="color:#25D366"></i> WhatsApp</div><p style="color:var(--text-3);font-size:12px">Alertas automáticos de vencimento</p><span class="badge badge-gray" style="margin-top:6px">Em breve</span></div>
+              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-weight:600;margin-bottom:4px"><i class="ti ti-chart-bar" style="color:#F2C811"></i> Power BI</div><p style="color:var(--text-3);font-size:12px">Dashboard gerencial integrado</p><span class="badge badge-gray" style="margin-top:6px">Em breve</span></div>
+              <div style="padding:12px;background:var(--gray-50);border-radius:var(--radius);border:1px solid var(--border)"><div style="font-weight:600;margin-bottom:4px"><i class="ti ti-mail" style="color:var(--blue-600)"></i> E-mail automático</div><p style="color:var(--text-3);font-size:12px">Notificações para RH e supervisores</p><span class="badge badge-gray" style="margin-top:6px">Em breve</span></div>
             </div>
           </div>
         </div>
@@ -637,146 +535,172 @@
       <div id="sc-documentos" class="screen">
         <div class="grid-2">
           <div class="card">
-            <div class="card-title"><div class="card-title-left"><i class="ti ti-file-text"></i> Gerar formulário de folga</div></div>
+            <div class="card-title"><div class="card-title-left"><i class="ti ti-file-text"></i> Gerar formulário oficial</div></div>
+            <div class="alert alert-info"><i class="ti ti-info-circle"></i><div style="font-size:12px">Formulário idêntico ao modelo PDF (Código FI.BRA.GER-04.130A). <strong>Destino</strong> = cidade do colaborador · <strong>Origem</strong> = cidade da obra (preenchidos automaticamente).</div></div>
             <div class="form-grid">
               <div class="form-group full">
-                <label>Colaborador *</label>
+                <label for="doc-colab">Colaborador *</label>
                 <div class="sugg-wrap">
                   <input type="text" id="doc-colab" placeholder="Buscar por nome ou matrícula..." oninput="buscarColabDoc()" autocomplete="off">
-                  <div class="sugg-list" id="doc-sugestoes"></div>
+                  <div class="sugg-list" id="doc-sugestoes" role="listbox"></div>
                 </div>
               </div>
-              <div class="form-group">
-                <label>Tipo de documento</label>
-                <select id="doc-tipo">
-                  <option>Gozo de Folga</option>
-                  <option>Indenização</option>
-                  <option>Solicitação de Visita Familiar</option>
-                  <option>Termo de Programação</option>
-                </select>
+              <div class="form-group"><label for="doc-tipo">Tipo de formulário</label>
+                <select id="doc-tipo"><option>Gozo</option><option>Indenização</option><option>Solicitação de Visita Familiar</option></select>
               </div>
-              <div class="form-group">
-                <label>Responsável pela assinatura</label>
-                <input type="text" id="doc-resp" placeholder="Nome do supervisor">
-              </div>
-              <div class="form-group">
-                <label>Data de saída</label>
-                <input type="date" id="doc-saida">
-              </div>
-              <div class="form-group">
-                <label>Data de retorno</label>
-                <input type="date" id="doc-retorno">
-              </div>
+              <div class="form-group"><label for="doc-valor-iden">Valor indenização (R$)</label><input type="number" id="doc-valor-iden" placeholder="Ex: 2000" step="0.01" min="0"></div>
+              <div class="form-group"><label for="doc-saida">Data de saída *</label><input type="date" id="doc-saida"></div>
+              <div class="form-group"><label for="doc-retorno">Data de retorno</label><input type="date" id="doc-retorno"></div>
+              <div class="form-group"><label for="doc-origem">Origem <span style="font-size:11px;color:var(--teal-600)">✓ automático</span></label><input type="text" id="doc-origem" placeholder="Cidade da obra"></div>
+              <div class="form-group"><label for="doc-destino">Destino <span style="font-size:11px;color:var(--teal-600)">✓ automático</span></label><input type="text" id="doc-destino" placeholder="Cidade do colaborador"></div>
             </div>
             <div class="form-actions">
-              <button class="btn btn-primary" onclick="gerarDocumento()"><i class="ti ti-file-text"></i> Gerar documento</button>
-              <button class="btn"><i class="ti ti-printer"></i> Imprimir</button>
+              <button class="btn btn-primary" onclick="gerarDocumento()"><i class="ti ti-printer"></i> Gerar e imprimir</button>
             </div>
           </div>
           <div class="card">
             <div class="card-title"><div class="card-title-left"><i class="ti ti-history"></i> Documentos recentes</div></div>
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Tipo</th><th>Colaborador</th><th>Gerado em</th><th>Por</th><th></th></tr></thead>
-                <tbody id="doc-historico">
-                  <tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;font-size:13px">Nenhum documento gerado ainda</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Colaborador</th><th>Gerado em</th><th>Por</th><th></th></tr></thead>
+              <tbody id="doc-historico"><tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;font-size:13px">Nenhum documento gerado ainda</td></tr></tbody>
+            </table></div>
+            <div class="alert alert-info" style="margin-top:12px"><i class="ti ti-info-circle"></i><div style="font-size:12px">O formulário abre em nova aba com diálogo de impressão. Selecione <strong>"Salvar como PDF"</strong> para exportar.</div></div>
           </div>
         </div>
       </div>
 
-      <!-- ══ USUÁRIOS ══ -->
+      <!-- ══ CONTROLE DE ACESSO ══ -->
       <div id="sc-usuarios" class="screen">
         <div class="card">
-          <div class="card-title">
-            <div class="card-title-left"><i class="ti ti-shield-check"></i> Usuários e permissões</div>
-            <button class="btn btn-primary btn-sm"><i class="ti ti-plus"></i> Novo usuário</button>
+          <div class="card-title"><div class="card-title-left"><i class="ti ti-shield-check"></i> Usuários e permissões</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirNovoUsuario()"><i class="ti ti-plus"></i> Novo usuário</button>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Último acesso</th><th>Status</th><th>Ações</th></tr></thead>
-              <tbody id="usuarios-tbody"></tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table><thead><tr><th>Usuário / E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody id="usuarios-tbody"></tbody></table></div>
         </div>
         <div class="card">
           <div class="card-title"><div class="card-title-left"><i class="ti ti-lock"></i> Permissões por perfil</div></div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Funcionalidade</th><th>Administrador</th><th>RH</th><th>Supervisão</th><th>Consulta</th></tr></thead>
-              <tbody>
-                <tr><td>Dashboard</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td></tr>
-                <tr><td>Programar folgas</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td></tr>
-                <tr><td>Cadastrar colaboradores</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td></tr>
-                <tr><td>Importar planilha</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td></tr>
-                <tr><td>Gerar documentos</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td></tr>
-                <tr><td>Gerenciar usuários</td><td><i class="ti ti-check" style="color:var(--teal-600)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td><td><i class="ti ti-x" style="color:var(--red-400)"></i></td></tr>
-              </tbody>
-            </table>
-          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Funcionalidade</th><th>Admin</th><th>RH</th><th>Supervisão</th><th>Consulta</th></tr></thead>
+            <tbody>
+              <tr><td>Dashboard e alertas</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td>Programar folgas</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+              <tr><td>Atualizar status itinerário</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Cadastrar/editar colaboradores</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Excluir colaboradores em lote</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Importar planilha</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td>Gerar relatórios e documentos</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+              <tr><td>Gerenciar usuários</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+            </tbody>
+          </table></div>
         </div>
       </div>
 
-    </div><!-- /content -->
-  </div><!-- /main-area -->
-</div><!-- /app-screen -->
+    </main>
+  </div>
+</div>
 
 <!-- ══ MODAIS ══ -->
+
 <!-- Modal: Ver colaborador -->
-<div class="modal-overlay" id="modal-colab">
+<div class="modal-overlay" id="modal-colab" role="dialog" aria-modal="true" aria-labelledby="modal-colab-label">
   <div class="modal" style="width:640px">
-    <div class="modal-header">
-      <span class="modal-title">Perfil do colaborador</span>
-      <span class="modal-close" onclick="closeModal('modal-colab')"><i class="ti ti-x"></i></span>
-    </div>
+    <div class="modal-header"><span class="modal-title" id="modal-colab-label">Perfil do colaborador</span><button class="modal-close" onclick="closeModal('modal-colab')" aria-label="Fechar"><i class="ti ti-x"></i></button></div>
     <div id="modal-colab-body"></div>
   </div>
 </div>
 
 <!-- Modal: Novo/Editar colaborador -->
-<div class="modal-overlay" id="modal-novo-colab">
+<div class="modal-overlay" id="modal-novo-colab" role="dialog" aria-modal="true" aria-labelledby="modal-colab-titulo">
   <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title" id="modal-colab-titulo">Novo colaborador</span>
-      <span class="modal-close" onclick="closeModal('modal-novo-colab')"><i class="ti ti-x"></i></span>
-    </div>
+    <div class="modal-header"><span class="modal-title" id="modal-colab-titulo">Novo colaborador</span><button class="modal-close" onclick="closeModal('modal-novo-colab')" aria-label="Fechar"><i class="ti ti-x"></i></button></div>
     <div class="form-grid">
-      <div class="form-group"><label>Matrícula (CHAPA) *</label><input type="text" id="novo-chapa" placeholder="50006"></div>
-      <div class="form-group"><label>Status</label>
-        <select id="novo-status"><option>Ativo</option><option>Em Folga</option><option>Inativo</option></select>
-      </div>
-      <div class="form-group full"><label>Nome completo *</label><input type="text" id="novo-nome" placeholder="NOME EM MAIÚSCULAS"></div>
-      <div class="form-group full"><label>Função *</label><input type="text" id="novo-funcao" placeholder="CARGO / FUNÇÃO"></div>
-      <div class="form-group"><label>Obra / Projeto</label>
-        <select id="novo-obra">
-          <option>UHE Sinop MT</option><option>LT Norte AM</option>
-          <option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option>
+      <div class="form-group"><label for="novo-chapa">Matrícula (CHAPA) *</label><input type="text" id="novo-chapa" placeholder="52991"></div>
+      <div class="form-group"><label for="novo-status">Status</label><select id="novo-status"><option>Ativo</option><option>Em Folga</option><option>Inativo</option></select></div>
+      <div class="form-group full"><label for="novo-nome">Nome completo *</label><input type="text" id="novo-nome" placeholder="NOME EM MAIÚSCULAS"></div>
+      <div class="form-group full"><label for="novo-funcao">Função *</label><input type="text" id="novo-funcao" placeholder="CARGO / FUNÇÃO"></div>
+      <div class="form-group"><label for="novo-cpf">CPF</label><input type="text" id="novo-cpf" placeholder="000.000.000-00" maxlength="14"></div>
+      <div class="form-group"><label for="novo-cip">CIP</label><input type="text" id="novo-cip" placeholder="UT1.2.21"></div>
+      <div class="form-group"><label for="novo-obra">Obra / Projeto</label><select id="novo-obra"><option>UHE Sinop MT</option><option>LT Norte AM</option><option>PCH Itapiranga</option><option>Sub Boa Vista</option><option>LT Pará</option></select></div>
+      <div class="form-group"><label for="novo-periodo">Periodicidade</label><select id="novo-periodo"><option value="30">30 dias</option><option value="45">45 dias</option><option value="60" selected>60 dias</option><option value="90">90 dias</option><option value="0">Sem direito</option></select></div>
+      <div class="form-group"><label for="novo-empresa">Empresa</label><input type="text" id="novo-empresa" placeholder="Razão social"></div>
+      <div class="form-group"><label for="novo-admissao">Data de admissão</label><input type="date" id="novo-admissao"></div>
+      <div class="form-group"><label for="novo-apresentacao">Chegada na obra</label><input type="date" id="novo-apresentacao"></div>
+      <div class="form-group"><label for="novo-cidade">Cidade</label><input type="text" id="novo-cidade" placeholder="Cidade de origem"></div>
+      <div class="form-group"><label for="novo-estado">Estado (UF)</label><input type="text" id="novo-estado" placeholder="AM" maxlength="2"></div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-novo-colab')">Cancelar</button><button class="btn btn-primary" onclick="salvarColaborador()"><i class="ti ti-check"></i> Salvar</button></div>
+  </div>
+</div>
+
+<!-- Modal: Atualizar status itinerário -->
+<div class="modal-overlay" id="modal-itinerario" role="dialog" aria-modal="true" aria-labelledby="itin-titulo">
+  <div class="modal" style="width:480px">
+    <div class="modal-header"><span class="modal-title" id="itin-titulo">Atualizar itinerário / voucher</span><button class="modal-close" onclick="closeModal('modal-itinerario')" aria-label="Fechar"><i class="ti ti-x"></i></button></div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:14px">Colaborador: <strong id="itin-nome"></strong></p>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group"><label for="itin-status">Status do itinerário</label>
+        <select id="itin-status">
+          <option value="aguardando">Aguardando emissão</option>
+          <option value="tratativa">Em tratativa</option>
+          <option value="emitido">Voucher emitido</option>
+          <option value="indenizacao">Indenização aprovada</option>
+          <option value="finalizado">Finalizado</option>
         </select>
       </div>
-      <div class="form-group"><label>Periodicidade de folga</label>
-        <select id="novo-periodo">
-          <option value="30">30 dias</option><option value="45">45 dias</option>
-          <option value="60" selected>60 dias</option><option value="90">90 dias</option>
-          <option value="0">Sem direito</option>
-        </select>
+      <div class="form-group"><label for="itin-valor">Valor da indenização (R$)</label><input type="number" id="itin-valor" placeholder="Ex: 2000" step="0.01" min="0"></div>
+      <div class="form-group"><label for="itin-obs">Observações</label><textarea id="itin-obs" rows="3" placeholder="Cia aérea, nº voucher, tratativas..."></textarea></div>
+    </div>
+    <div class="form-actions"><button class="btn" onclick="closeModal('modal-itinerario')">Cancelar</button><button class="btn btn-primary" onclick="salvarItinerario()"><i class="ti ti-check"></i> Salvar status</button></div>
+  </div>
+</div>
+
+<!-- Modal: Histórico do itinerário -->
+<div class="modal-overlay" id="modal-hist-itin" role="dialog" aria-modal="true" aria-labelledby="hist-itin-titulo">
+  <div class="modal" style="width:520px">
+    <div class="modal-header"><span class="modal-title" id="hist-itin-titulo"><i class="ti ti-history"></i> Histórico do itinerário</span><button class="modal-close" onclick="closeModal('modal-hist-itin')" aria-label="Fechar"><i class="ti ti-x"></i></button></div>
+    <div id="modal-hist-itin-body"></div>
+  </div>
+</div>
+
+<!-- Modal: Novo/Editar usuário -->
+<div class="modal-overlay" id="modal-usuario" role="dialog" aria-modal="true" aria-labelledby="modal-usuario-titulo">
+  <div class="modal" style="width:440px">
+    <div class="modal-header"><span class="modal-title" id="modal-usuario-titulo">Novo usuário</span><button class="modal-close" onclick="closeModal('modal-usuario')" aria-label="Fechar"><i class="ti ti-x"></i></button></div>
+    <div class="form-grid" style="grid-template-columns:1fr">
+      <div class="form-group"><label for="u-nome">Nome completo *</label><input type="text" id="u-nome" placeholder="Nome do usuário" autocomplete="off"></div>
+      <div class="form-group"><label for="u-email">E-mail *</label><input type="email" id="u-email" placeholder="usuario@azulao.com.br" autocomplete="off"></div>
+      <div class="form-group"><label for="u-perfil">Perfil de acesso</label>
+        <select id="u-perfil"><option>Administrador</option><option>RH</option><option>Supervisão</option><option selected>Consulta</option></select>
       </div>
-      <div class="form-group"><label>Empresa</label><input type="text" id="novo-empresa" placeholder="Razão social"></div>
-      <div class="form-group"><label>Data de admissão</label><input type="date" id="novo-admissao"></div>
-      <div class="form-group"><label>Chegada na obra (apresentação)</label><input type="date" id="novo-apresentacao"></div>
-      <div class="form-group"><label>Cidade</label><input type="text" id="novo-cidade" placeholder="Cidade de origem"></div>
-      <div class="form-group"><label>Estado</label><input type="text" id="novo-estado" placeholder="UF" maxlength="2"></div>
+      <div class="form-group">
+        <label for="u-senha">Nova senha <span style="color:var(--text-3);font-size:11px" id="u-senha-hint">(deixe vazio para manter atual)</span></label>
+        <input type="password" id="u-senha" placeholder="Mínimo 4 caracteres" autocomplete="new-password">
+      </div>
+      <div class="form-group"><label for="u-senha2">Confirmar senha</label><input type="password" id="u-senha2" placeholder="Repita a senha" autocomplete="new-password"></div>
     </div>
     <div class="form-actions">
-      <button class="btn" onclick="closeModal('modal-novo-colab')">Cancelar</button>
-      <button class="btn btn-primary" onclick="salvarColaborador()"><i class="ti ti-check"></i> Salvar</button>
+      <button class="btn" onclick="closeModal('modal-usuario')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-salvar-usuario" onclick="salvarUsuario()"><i class="ti ti-check"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirmação -->
+<div class="modal-overlay" id="modal-confirm" role="alertdialog" aria-modal="true" aria-labelledby="confirm-titulo">
+  <div class="modal" style="width:420px;text-align:center">
+    <div style="padding:8px 0 16px">
+      <i class="ti ti-alert-triangle confirm-icon" style="color:var(--red-400)" aria-hidden="true"></i>
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:8px" id="confirm-titulo">Confirmar exclusão</h2>
+      <p style="font-size:13px;color:var(--text-2);line-height:1.6" id="confirm-msg"></p>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:center">
+      <button class="btn" onclick="closeModal('modal-confirm')"><i class="ti ti-x"></i> Cancelar</button>
+      <button class="btn btn-danger" id="btn-confirm-ok" onclick="executarConfirm()"><i class="ti ti-trash"></i> Confirmar exclusão</button>
     </div>
   </div>
 </div>
 
 <!-- Toast -->
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
